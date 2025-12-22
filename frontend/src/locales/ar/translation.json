@@ -1,0 +1,322 @@
+{
+  "common": {
+    "appName": "CardioAI",
+    "welcome": "مرحباً",
+    "back": "رجوع",
+    "signIn": "تسجيل الدخول",
+    "signUp": "ابدأ الآن",
+    "logout": "تسجيل الخروج",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "saveChanges": "حفظ التغييرات",
+    "edit": "تعديل",
+    "view": "عرض",
+    "export": "تصدير",
+    "loading": "جار التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "optional": "اختياري",
+    "yearsShort": "سنة",
+    "unauthorized": "غير مصرح",
+    "unauthorizedMessage": "ليس لديك صلاحية الوصول إلى الصفحة المطلوبة.",
+    "goBack": "العودة",
+    "pageNotFoundTitle": "عذراً!",
+    "pageNotFound": "الصفحة غير موجودة",
+    "visitHomepage": "زيارة الصفحة الرئيسية"
+  },
+  "nav": {
+    "features": "المميزات",
+    "howItWorks": "كيف يعمل",
+    "cardiacDiagnosis": "تشخيص القلب",
+    "reports": "التقارير",
+    "profile": "الملف الشخصي"
+  },
+  "landing": {
+    "hero": {
+      "title": "مدعوم بالذكاء الاصطناعي",
+      "titleHighlight": "أمراض القلب",
+      "titleEnd": "التشخيص",
+      "subtitle": "قم بتحميل صور الأشعة السينية وبيانات المريض للحصول على تشخيص فوري بمساعدة الذكاء الاصطناعي بدقة 98.7٪. الكشف المبكر ينقذ الأرواح."
+    },
+    "badges": {
+      "fdaCleared": "معتمد من FDA",
+      "hipaaCompliant": "متوافق مع HIPAA",
+      "resultsTime": "النتائج في أقل من 5 دقائق"
+    },
+    "diagnosis": {
+      "result": "تشخيص الذكاء الاصطناعي: طبيعي"
+    },
+    "features": {
+      "title": "ميزات التشخيص المتقدمة بالذكاء الاصطناعي",
+      "subtitle": "تجمع منصتنا بين نماذج الذكاء الاصطناعي المتعددة لتوفير تقييم شامل لصحة القلب",
+      "aiImageAnalysis": {
+        "title": "تحليل الصور بالذكاء الاصطناعي",
+        "description": "اكتشاف الحالات الشاذة في الأشعة السينية والرنين المغناطيسي والأشعة المقطعية باستخدام خوارزميات التعلم العميق المدربة على أكثر من 500,000 صورة قلبية."
+      },
+      "vitalSignsPrediction": {
+        "title": "التنبؤ بالعلامات الحيوية",
+        "description": "التنبؤ بالأحداث القلبية المحتملة من خلال تحليل مخطط كهربية القلب وضغط الدم ومستويات الكوليسترول والعلامات الحيوية الأخرى."
+      },
+      "nlpClinicalNotes": {
+        "title": "معالجة الملاحظات السريرية",
+        "description": "استخراج الرؤى من ملاحظات الطبيب وتاريخ المريض والتقارير السريرية باستخدام معالجة اللغة الطبيعية."
+      }
+    },
+    "howItWorks": {
+      "title": "كيف يعمل",
+      "subtitle": "أربع خطوات بسيطة للحصول على تشخيص القلب بالذكاء الاصطناعي",
+      "steps": {
+        "uploadData": {
+          "title": "تحميل البيانات",
+          "description": "قم بتحميل الصور الطبية وبيانات صحة المريض بشكل آمن من خلال بوابتنا المشفرة."
+        },
+        "aiAnalysis": {
+          "title": "تحليل الذكاء الاصطناعي",
+          "description": "تحلل نماذج الذكاء الاصطناعي المتقدمة لدينا بياناتك باستخدام خوارزميات التعلم العميق الحديثة."
+        },
+        "getResults": {
+          "title": "الحصول على النتائج",
+          "description": "احصل على نتائج تشخيصية شاملة مع درجات الثقة في أقل من 5 دقائق."
+        },
+        "consultDoctor": {
+          "title": "استشارة الطبيب",
+          "description": "شارك التشخيص بمساعدة الذكاء الاصطناعي مع مقدم الرعاية الصحية للحصول على استشارة متخصصة."
+        }
+      }
+    }
+  },
+  "theme": {
+    "switchToLight": "التبديل إلى الوضع الفاتح",
+    "switchToDark": "التبديل إلى الوضع الداكن"
+  },
+  "mobile": {
+    "language": "اللغة"
+  },
+  "login": {
+    "title": "مرحباً بعودتك",
+    "subtitle": "قم بتسجيل الدخول إلى حساب CardioAI الخاص بك للوصول إلى المنصة. ليس لديك حساب؟",
+    "requestAccess": "طلب الوصول",
+    "emailAddress": "اسم المستخدم",
+    "emailPlaceholder": "أدخل اسم المستخدم",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "rememberMe": "تذكرني",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "signIn": "تسجيل الدخول",
+    "healthcareProvider": "هل أنت مقدم رعاية صحية؟",
+    "institutionalAccess": "اتصل بنا للحصول على الوصول المؤسسي",
+    "errors": {
+      "noServerResponse": "لا يوجد استجابة من الخادم",
+      "missingCredentials": "اسم المستخدم أو كلمة المرور مفقودة",
+      "unauthorized": "غير مصرح",
+      "loginFailed": "فشل تسجيل الدخول"
+    }
+  },
+  "register": {
+    "title": "إنشاء حسابك",
+    "subtitle": "انضم إلى مستقبل رعاية القلب اليوم",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "phoneNumber": "رقم الهاتف",
+    "country": "البلد",
+    "city": "المدينة / المحافظة",
+    "selectCountry": "اختر بلداً",
+    "selectCity": "اختر مدينة/محافظة",
+    "createAccount": "إنشاء حساب",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "instructions": {
+      "username": "أدخل اسم المستخدم",
+      "password": "أدخل كلمة المرور",
+      "confirmPassword": "تأكيد كلمة المرور"
+    },
+    "errors": {
+      "noServerResponse": "لا يوجد استجابة من الخادم",
+      "usernameTaken": "اسم المستخدم مأخوذ",
+      "registrationFailed": "فشل التسجيل"
+    }
+  },
+  "cardiacDiagnosis": {
+    "title": "تشخيص القلب",
+    "subtitle": "قم بتحميل الصور الطبية لتحليل القلب بالذكاء الاصطناعي",
+    "uploadSection": {
+      "title": "تحميل الصورة الطبية",
+      "dragDrop": "اسحب وأفلت الصورة الطبية هنا",
+      "or": "أو",
+      "browse": "تصفح الملفات",
+      "supportedFormats": "المدعوم: DICOM, JPEG, PNG, TIFF (حد أقصى 50 ميجابايت)",
+      "analyzing": "جار تحليل الصورة...",
+      "uploadAnother": "تحميل آخر",
+      "errors": {
+        "fileSize": "حجم الملف يتجاوز حد 50 ميجابايت",
+        "fileType": "نوع ملف غير صالح. يرجى تحميل ملفات DICOM أو JPEG أو PNG أو TIFF.",
+        "uploadFailed": "فشل التحميل. يرجى المحاولة مرة أخرى."
+      }
+    },
+    "imagePreview": {
+      "title": "معاينة الصورة",
+      "noImage": "لم يتم تحميل صورة بعد"
+    },
+    "patientInfo": {
+      "title": "معلومات المريض",
+      "patientName": "اسم المريض",
+      "patientNamePlaceholder": "أدخل اسم المريض",
+      "age": "العمر",
+      "agePlaceholder": "أدخل عمر المريض",
+      "gender": "الجنس",
+      "selectGender": "اختر الجنس",
+      "male": "ذكر",
+      "female": "أنثى",
+      "scanType": "نوع الفحص",
+      "selectScanType": "اختر نوع الفحص",
+      "xRay": "أشعة سينية",
+      "ecg": "تخطيط القلب",
+      "mri": "رنين مغناطيسي",
+      "ctScan": "أشعة مقطعية",
+      "clinicalNotes": "ملاحظات سريرية (اختياري)",
+      "clinicalNotesPlaceholder": "أدخل أي معلومات سريرية ذات صلة...",
+      "analyzeButton": "تحليل بالذكاء الاصطناعي"
+    },
+    "results": {
+      "title": "نتائج التشخيص",
+      "diagnosis": "التشخيص",
+      "confidence": "الثقة",
+      "riskLevel": "مستوى الخطر",
+      "details": "التفاصيل",
+      "recommendations": "التوصيات",
+      "noResults": "قم بتحميل صورة وانقر على 'تحليل بالذكاء الاصطناعي' لرؤية النتائج."
+    },
+    "previousScans": {
+      "title": "الفحوصات السابقة",
+      "viewDetails": "عرض التفاصيل",
+      "noScans": "لا توجد فحوصات سابقة متاحة",
+      "loading": "جار تحميل الفحوصات السابقة..."
+    },
+    "errors": {
+      "missingData": "يرجى ملء جميع الحقول المطلوبة",
+      "noImage": "يرجى تحميل صورة طبية",
+      "analysisError": "فشل التحليل. يرجى المحاولة مرة أخرى."
+    }
+  },
+  "profile": {
+    "loadingProfile": "جار تحميل الملف الشخصي...",
+    "title": "ملفي الشخصي",
+    "subtitle": "إدارة إعدادات حسابك وتفضيلاتك ومعلوماتك المهنية",
+    "doctorTitle": "د.",
+    "jobTitle": "طبيب قلب معتمد",
+    "verifiedBadge": "محترف موثق",
+    "stats": {
+      "totalReports": "إجمالي التقارير",
+      "avgAccuracy": "متوسط الدقة",
+      "patients": "المرضى",
+      "platformUsage": "استخدام المنصة"
+    },
+    "personalInfo": {
+      "title": "المعلومات الشخصية"
+    },
+    "form": {
+      "firstName": "الاسم الأول",
+      "firstNamePlaceholder": "محمد",
+      "lastName": "اسم العائلة",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "emailPlaceholder": "أدخل عنوان البريد الإلكتروني",
+      "phoneNumber": "رقم الهاتف",
+      "country": "البلد",
+      "countryPlaceholder": "مصر",
+      "city": "المدينة",
+      "cityPlaceholder": "القاهرة",
+      "professionalBio": "السيرة المهنية",
+      "bioPlaceholder": "أدخل سيرتك المهنية"
+    }
+  },
+  "reports": {
+    "title": "سجل التقارير",
+    "subtitle": "عرض وإدارة جميع تقارير تشخيص القلب المدعومة بالذكاء الاصطناعي",
+    "stats": {
+      "totalReports": "إجمالي التقارير",
+      "averageAccuracy": "متوسط الدقة",
+      "normalFindings": "نتائج طبيعية",
+      "abnormalFindings": "نتائج غير طبيعية",
+      "criticalCases": "حالات حرجة"
+    },
+    "filters": {
+      "title": "تصفية التقارير",
+      "clearAll": "مسح جميع الفلاتر",
+      "allStatus": "جميع الحالات",
+      "normal": "طبيعي",
+      "abnormal": "غير طبيعي",
+      "critical": "حرج",
+      "allTypes": "جميع الأنواع",
+      "xRay": "أشعة سينية",
+      "ctScan": "أشعة مقطعية",
+      "mri": "رنين مغناطيسي",
+      "ecg": "تخطيط القلب",
+      "echocardiogram": "إيكو",
+      "allTime": "كل الأوقات",
+      "today": "اليوم",
+      "thisWeek": "هذا الأسبوع",
+      "thisMonth": "هذا الشهر",
+      "thisYear": "هذا العام"
+    },
+    "viewMode": {
+      "allReports": "جميع التقارير",
+      "grid": "شبكة",
+      "list": "قائمة"
+    },
+    "card": {
+      "scanDate": "تاريخ الفحص",
+      "riskLevel": "مستوى الخطر",
+      "aiConfidence": "ثقة الذكاء الاصطناعي"
+    },
+    "table": {
+      "patient": "المريض",
+      "diagnosis": "التشخيص",
+      "status": "الحالة",
+      "confidence": "الثقة",
+      "date": "التاريخ",
+      "actions": "الإجراءات"
+    },
+    "modal": {
+      "title": "تفاصيل التقرير",
+      "reportId": "رقم التقرير:",
+      "patientInfo": "معلومات المريض",
+      "patientName": "اسم المريض",
+      "age": "العمر",
+      "gender": "الجنس",
+      "scanType": "نوع الفحص",
+      "scanDate": "تاريخ الفحص",
+      "status": "الحالة",
+      "scanImage": "صورة الفحص",
+      "diagnosis": "التشخيص",
+      "risk": "الخطر",
+      "confidence": "الثقة",
+      "clinicalNotes": "ملاحظات سريرية",
+      "recommendations": "التوصيات"
+    },
+    "export": {
+      "title": "تقرير تشخيص القلب",
+      "subtitle": "تحليل طبي مدعوم بالذكاء الاصطناعي",
+      "generatedOn": "تم إنشاؤه في:",
+      "patientInfo": "معلومات المريض",
+      "patientName": "اسم المريض",
+      "age": "العمر",
+      "years": "سنة",
+      "gender": "الجنس",
+      "scanType": "نوع الفحص",
+      "scanDate": "تاريخ الفحص",
+      "reportId": "رقم التقرير",
+      "scanImage": "صورة الفحص",
+      "diagnosisResults": "نتائج التشخيص",
+      "risk": "الخطر",
+      "confidence": "الثقة",
+      "findings": "النتائج:",
+      "noDetails": "لا توجد تفاصيل إضافية متاحة.",
+      "clinicalNotes": "ملاحظات سريرية",
+      "recommendations": "التوصيات",
+      "disclaimer1": "تم إنشاء هذا التقرير باستخدام تحليل القلب بالذكاء الاصطناعي.",
+      "disclaimer2": "يرجى استشارة مقدم رعاية صحية مؤهل للحصول على المشورة الطبية.",
+      "copyright": "نظام تشخيص القلب. جميع الحقوق محفوظة."
+    }
+  }
+}

@@ -1,0 +1,262 @@
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --primary: #16a34a;
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.text-decor {
+  text-decoration: none;
+}
+
+.light-theme {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --nav-border: #e5e7eb;
+  --active-bg: #ecfdf5; /* light green accent for active */
+}
+
+.dark-theme {
+  --bg: #0f172a;
+  --surface: #111827;
+  --muted: #9ca3af;
+  --text: #f9fafb;
+  --nav-border: transparent;
+  --active-bg: #071026; /* slightly darker than surface for active */
+}
+
+/* Map commonly used utility classes to theme-aware colors so toggling the
+   document class has visible effect even though components use Tailwind-like
+   utilities. These are intentionally specific and use !important so they
+   override utility rules coming from other CSS. */
+
+/* Light theme overrides */
+.light-theme .bg-white {
+  background-color: #ffffff !important;
+}
+.light-theme .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+.light-theme .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+.light-theme .bg-gray-800 {
+  background-color: #1f2937 !important;
+}
+.light-theme .bg-gray-700 {
+  background-color: #374151 !important;
+}
+.light-theme .bg-gray-900 {
+  background-color: #0f172a !important;
+}
+
+.light-theme .text-gray-900 {
+  color: #111827 !important;
+}
+.light-theme .text-gray-700 {
+  color: #374151 !important;
+}
+.light-theme .text-gray-600 {
+  color: #4b5563 !important;
+}
+.light-theme .text-gray-500 {
+  color: #6b7280 !important;
+}
+.light-theme .text-gray-400 {
+  color: #9ca3af !important;
+}
+.light-theme .text-gray-300 {
+  color: #d1d5db !important;
+}
+.light-theme .text-gray-200 {
+  color: #e5e7eb !important;
+}
+
+.light-theme .border-gray-200 {
+  border-color: #e5e7eb !important;
+}
+.light-theme .border-gray-700 {
+  border-color: #374151 !important;
+}
+
+/* Dark theme overrides */
+.dark-theme .bg-white {
+  background-color: var(--surface) !important;
+}
+.dark-theme .bg-gray-50 {
+  background-color: #0b1220 !important;
+}
+.dark-theme .bg-gray-100 {
+  background-color: #071026 !important;
+}
+.dark-theme .bg-gray-800 {
+  background-color: #111827 !important;
+}
+.dark-theme .bg-gray-700 {
+  background-color: #1f2937 !important;
+}
+.dark-theme .bg-gray-900 {
+  background-color: #030712 !important;
+}
+
+.dark-theme .text-gray-900 {
+  color: var(--text) !important;
+}
+.dark-theme .text-gray-700 {
+  color: #c7d2fe !important;
+}
+.dark-theme .text-gray-600 {
+  color: #94a3b8 !important;
+}
+.dark-theme .text-gray-500 {
+  color: #64748b !important;
+}
+.dark-theme .text-gray-400 {
+  color: #475569 !important;
+}
+.dark-theme .text-gray-300 {
+  color: #334155 !important;
+}
+.dark-theme .text-gray-200 {
+  color: #1f2937 !important;
+}
+
+.dark-theme .border-gray-200 {
+  border-color: #374151 !important;
+}
+.dark-theme .border-gray-700 {
+  border-color: #111827 !important;
+}
+
+/* Nav link helpers */
+.nav-link {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.nav-link:hover {
+  opacity: 0.95;
+}
+
+.light-theme .nav-link {
+  color: var(--text);
+}
+.light-theme .active-link {
+  background: var(--active-bg) !important;
+  color: var(--primary) !important;
+}
+
+.dark-theme .nav-link {
+  color: var(--text);
+}
+.dark-theme .active-link {
+  background: var(--active-bg) !important;
+  color: var(--text) !important;
+}
+
+/* Community link appearance when NOT active: subtle text color and small pill in light theme */
+.community-link {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+}
+.light-theme .community-link {
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.06);
+}
+.dark-theme .community-link {
+  color: #a7f3d0;
+  background: transparent;
+}
+.community-link.active-link {
+  box-shadow: none;
+}
+
+/* Animations for landing page */
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin linear infinite;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-in-out;
+}

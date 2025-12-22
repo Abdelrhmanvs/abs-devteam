@@ -1,0 +1,322 @@
+{
+  "common": {
+    "appName": "CardioAI",
+    "welcome": "Welcome",
+    "back": "Back",
+    "signIn": "Login",
+    "signUp": "Get Started",
+    "logout": "Logout",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveChanges": "Save Changes",
+    "edit": "Edit",
+    "view": "View",
+    "export": "Export",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "optional": "Optional",
+    "yearsShort": "yrs",
+    "unauthorized": "Unauthorized",
+    "unauthorizedMessage": "You do not have access to the requested page.",
+    "goBack": "Go Back",
+    "pageNotFoundTitle": "Oops!",
+    "pageNotFound": "Page Not Found",
+    "visitHomepage": "Visit Our Homepage"
+  },
+  "nav": {
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "cardiacDiagnosis": "Cardiac Diagnosis",
+    "reports": "Reports",
+    "profile": "Profile"
+  },
+  "landing": {
+    "hero": {
+      "title": "AI-Powered",
+      "titleHighlight": "Heart Disease",
+      "titleEnd": "Diagnosis",
+      "subtitle": "Upload X-ray images and patient data for instant AI-assisted diagnosis with 98.7% accuracy. Early detection saves lives."
+    },
+    "badges": {
+      "fdaCleared": "FDA Cleared",
+      "hipaaCompliant": "HIPAA Compliant",
+      "resultsTime": "Results in under 5 minutes"
+    },
+    "diagnosis": {
+      "result": "AI Diagnosis : Normal"
+    },
+    "features": {
+      "title": "Advanced AI Diagnostic Features",
+      "subtitle": "Our platform combines multiple AI models to provide comprehensive cardiac health assessment",
+      "aiImageAnalysis": {
+        "title": "AI Image Analysis",
+        "description": "Detect anomalies in X-ray, MRI, and CT scans with deep learning algorithms trained on over 500,000 cardiac images."
+      },
+      "vitalSignsPrediction": {
+        "title": "Vital Signs Prediction",
+        "description": "Predict potential cardiovascular events by analyzing ECG, blood pressure, cholesterol levels, and other vital signs."
+      },
+      "nlpClinicalNotes": {
+        "title": "NLP Clinical Notes",
+        "description": "Extract insights from doctor's notes, patient history, and clinical reports using natural language processing."
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Four simple steps to get AI-powered cardiac diagnosis",
+      "steps": {
+        "uploadData": {
+          "title": "Upload Data",
+          "description": "Securely upload medical images and patient health data through our encrypted portal."
+        },
+        "aiAnalysis": {
+          "title": "AI Analysis",
+          "description": "Our advanced AI models analyze your data using state-of-the-art deep learning algorithms."
+        },
+        "getResults": {
+          "title": "Get Results",
+          "description": "Receive comprehensive diagnostic results with confidence scores in under 5 minutes."
+        },
+        "consultDoctor": {
+          "title": "Consult Doctor",
+          "description": "Share AI-assisted diagnosis with your healthcare provider for expert consultation."
+        }
+      }
+    }
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "mobile": {
+    "language": "Language"
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to your CardioAI account to access the platform. Don't have an account?",
+    "requestAccess": "Request access",
+    "emailAddress": "Username",
+    "emailPlaceholder": "Enter your username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign In",
+    "healthcareProvider": "Are you a healthcare provider?",
+    "institutionalAccess": "Contact us for institutional access",
+    "errors": {
+      "noServerResponse": "No Server Response",
+      "missingCredentials": "Missing Username or Password",
+      "unauthorized": "Unauthorized",
+      "loginFailed": "Login Failed"
+    }
+  },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Join the future of cardiac care today",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "phoneNumber": "Phone Number",
+    "country": "Country",
+    "city": "City / Governorate",
+    "selectCountry": "Select a country",
+    "selectCity": "Select city/governorate",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "instructions": {
+      "username": "Enter your username",
+      "password": "Enter your password",
+      "confirmPassword": "Confirm your password"
+    },
+    "errors": {
+      "noServerResponse": "No Server Response",
+      "usernameTaken": "Username Taken",
+      "registrationFailed": "Registration Failed"
+    }
+  },
+  "cardiacDiagnosis": {
+    "title": "Cardiac Diagnosis",
+    "subtitle": "Upload medical images for AI-powered cardiac analysis",
+    "uploadSection": {
+      "title": "Upload Medical Image",
+      "dragDrop": "Drag & drop medical image here",
+      "or": "or",
+      "browse": "Browse Files",
+      "supportedFormats": "Supported: DICOM, JPEG, PNG, TIFF (Max 50MB)",
+      "analyzing": "Analyzing image...",
+      "uploadAnother": "Upload Another",
+      "errors": {
+        "fileSize": "File size exceeds 50MB limit",
+        "fileType": "Invalid file type. Please upload DICOM, JPEG, PNG, or TIFF files.",
+        "uploadFailed": "Upload failed. Please try again."
+      }
+    },
+    "imagePreview": {
+      "title": "Image Preview",
+      "noImage": "No image uploaded yet"
+    },
+    "patientInfo": {
+      "title": "Patient Information",
+      "patientName": "Patient Name",
+      "patientNamePlaceholder": "Enter patient name",
+      "age": "Age",
+      "agePlaceholder": "Enter patient age",
+      "gender": "Gender",
+      "selectGender": "Select gender",
+      "male": "Male",
+      "female": "Female",
+      "scanType": "Scan Type",
+      "selectScanType": "Select scan type",
+      "xRay": "X-Ray",
+      "ecg": "ECG",
+      "mri": "MRI",
+      "ctScan": "CT Scan",
+      "clinicalNotes": "Clinical Notes (Optional)",
+      "clinicalNotesPlaceholder": "Enter any relevant clinical information...",
+      "analyzeButton": "Analyze with AI"
+    },
+    "results": {
+      "title": "Diagnosis Results",
+      "diagnosis": "Diagnosis",
+      "confidence": "Confidence",
+      "riskLevel": "Risk Level",
+      "details": "Details",
+      "recommendations": "Recommendations",
+      "noResults": "Upload an image and click 'Analyze with AI' to see results."
+    },
+    "previousScans": {
+      "title": "Previous Scans",
+      "viewDetails": "View Details",
+      "noScans": "No previous scans available",
+      "loading": "Loading previous scans..."
+    },
+    "errors": {
+      "missingData": "Please fill in all required fields",
+      "noImage": "Please upload a medical image",
+      "analysisError": "Analysis failed. Please try again."
+    }
+  },
+  "profile": {
+    "loadingProfile": "Loading profile...",
+    "title": "My Profile",
+    "subtitle": "Manage your account settings, preferences, and professional information",
+    "doctorTitle": "Dr.",
+    "jobTitle": "Board Certified Cardiologist",
+    "verifiedBadge": "Verified Professional",
+    "stats": {
+      "totalReports": "Total Reports",
+      "avgAccuracy": "Avg. Accuracy",
+      "patients": "Patients",
+      "platformUsage": "Platform Usage"
+    },
+    "personalInfo": {
+      "title": "Personal Information"
+    },
+    "form": {
+      "firstName": "First Name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last Name",
+      "emailAddress": "Email Address",
+      "emailPlaceholder": "Enter email address",
+      "phoneNumber": "Phone Number",
+      "country": "Country",
+      "countryPlaceholder": "United States",
+      "city": "City",
+      "cityPlaceholder": "New York",
+      "professionalBio": "Professional Bio",
+      "bioPlaceholder": "Enter your professional bio"
+    }
+  },
+  "reports": {
+    "title": "Reports History",
+    "subtitle": "View and manage all your AI-powered cardiac diagnosis reports",
+    "stats": {
+      "totalReports": "Total Reports",
+      "averageAccuracy": "Average Accuracy",
+      "normalFindings": "Normal Findings",
+      "abnormalFindings": "Abnormal Findings",
+      "criticalCases": "Critical Cases"
+    },
+    "filters": {
+      "title": "Filter Reports",
+      "clearAll": "Clear All Filters",
+      "allStatus": "All Status",
+      "normal": "Normal",
+      "abnormal": "Abnormal",
+      "critical": "Critical",
+      "allTypes": "All Types",
+      "xRay": "X-Ray",
+      "ctScan": "CT Scan",
+      "mri": "MRI",
+      "ecg": "ECG",
+      "echocardiogram": "Echocardiogram",
+      "allTime": "All Time",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "thisYear": "This Year"
+    },
+    "viewMode": {
+      "allReports": "All Reports",
+      "grid": "Grid",
+      "list": "List"
+    },
+    "card": {
+      "scanDate": "Scan Date",
+      "riskLevel": "Risk Level",
+      "aiConfidence": "AI Confidence"
+    },
+    "table": {
+      "patient": "Patient",
+      "diagnosis": "Diagnosis",
+      "status": "Status",
+      "confidence": "Confidence",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "modal": {
+      "title": "Report Details",
+      "reportId": "Report ID:",
+      "patientInfo": "Patient Information",
+      "patientName": "Patient Name",
+      "age": "Age",
+      "gender": "Gender",
+      "scanType": "Scan Type",
+      "scanDate": "Scan Date",
+      "status": "Status",
+      "scanImage": "Scan Image",
+      "diagnosis": "Diagnosis",
+      "risk": "Risk",
+      "confidence": "Confidence",
+      "clinicalNotes": "Clinical Notes",
+      "recommendations": "Recommendations"
+    },
+    "export": {
+      "title": "Cardiac Diagnosis Report",
+      "subtitle": "AI-Powered Medical Analysis",
+      "generatedOn": "Generated on:",
+      "patientInfo": "Patient Information",
+      "patientName": "Patient Name",
+      "age": "Age",
+      "years": "years",
+      "gender": "Gender",
+      "scanType": "Scan Type",
+      "scanDate": "Scan Date",
+      "reportId": "Report ID",
+      "scanImage": "Scan Image",
+      "diagnosisResults": "Diagnosis Results",
+      "risk": "RISK",
+      "confidence": "CONFIDENCE",
+      "findings": "Findings:",
+      "noDetails": "No additional details provided.",
+      "clinicalNotes": "Clinical Notes",
+      "recommendations": "Recommendations",
+      "disclaimer1": "This report was generated using AI-powered cardiac analysis.",
+      "disclaimer2": "Please consult with a qualified healthcare professional for medical advice.",
+      "copyright": "Cardiac Diagnosis System. All rights reserved."
+    }
+  }
+}
