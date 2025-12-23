@@ -3,16 +3,25 @@ import UpperNav from "./UpperNav";
 
 const Layout = () => {
   const location = useLocation();
-  const isLandingPage = location.pathname === "/";
   const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/register";
+    location.pathname === "/login" ||
+    location.pathname === "/" ||
+    location.pathname === "/unauthorized";
 
   return (
     <div className="App">
-      {!isLandingPage && !isAuthPage && <UpperNav />}
-      <main>
-        <Outlet />
-      </main>
+      {!isAuthPage ? (
+        <div style={{ display: "flex" }}>
+          <UpperNav />
+          <main style={{ flex: 1 }}>
+            <Outlet />
+          </main>
+        </div>
+      ) : (
+        <main>
+          <Outlet />
+        </main>
+      )}
     </div>
   );
 };
