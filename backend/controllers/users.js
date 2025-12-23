@@ -2,16 +2,17 @@ const User = require("../models/User");
 const asyncHandler = require("express-async-handler"); // keep us from using try and catch alot
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { encryptPassword, decryptPassword } = require("../utils/encryption");
 //@desc get all users
 //@route get/users
 //@access Private
 //Admin access
 const getallUsers = asyncHandler(async (req, res) => {
   // ✅ Use the user and roles from the verified token
-  const username = req.user;
+  const email = req.user;
   const roles = req.roles;
 
-  if (!username) {
+  if (!email) {
     return res.status(400).json({ message: "User not found in token" });
   }
 
@@ -106,37 +107,59 @@ const createNewUser = asyncHandler(async (req, res) => {
 //@access Private
 // only user
 const updateuser = asyncHandler(async (req, res) => {
-  const { username, active, password, phonenumber, country, city } = req.body;
+  const {
+    username,
+    fullName,
+    email,
+    phoneNumber,
+    password,
+    employeeCode,
+    fingerprintCode,
+    jobPosition,
+    branch,
+    active,
+    phonenumber,
+    country,
+    city,
+  } = req.body;
   const { id } = req.params;
 
-  // Confirm data
-  if ((!id || !username, !phonenumber, !country, !city)) {
-    return res.status(400).json({ message: "All field are required" });
+  // Confirm data - require either employee fields or user fields
+  if (!id) {
+    return res.status(400).json({ message: "User ID is required" });
   }
+
   const user = await User.findById(id).exec();
   if (!user) {
     return res.status(400).json({ message: "User not found" });
   }
-  //Check for duplicate
-  const duplicate = await User.findOne({ username })
-    .collation({ locale: "en", strength: 2 })
-    .lean()
-    .exec();
-  // Allow updates to the original user permission to the owned user
-  if (duplicate && duplicate?._id.toString() !== id) {
-    return res.status(409).json({ message: "Duplicate username" });
+
+  // Update employee fields if provided
+  if (fullName) user.fullName = fullName;
+  if (email) user.email = email;
+  if (phoneNumber) user.phonenumber = phoneNumber;
+  if (employeeCode) user.employeeCode = employeeCode;
+  if (fingerprintCode) user.fingerprintCode = fingerprintCode;
+  if (jobPosition) user.jobPosition = jobPosition;
+  if (branch) user.branch = branch;
+
+  // Update regular user fields if provided
+  if (username) user.username = username;
+  if (active !== undefined) user.active = active;
+  if (phonenumber) user.phonenumber = phonenumber;
+  if (country) user.country = country;
+  if (city) user.city = city;
+
+  // Update password if provided
+  if (password && password.trim() !== "") {
+    user.password = await bcrypt.hash(password, 10);
+    user.encryptedPassword = encryptPassword(password);
   }
-  user.username = username;
-  user.active = active;
-  user.phonenumber = phonenumber;
-  user.country = country;
-  user.city = city;
-  if (password) {
-    //Hashpassword
-    user.password = await bcrypt.hash(password, 10); //salt rounds
-  }
+
   const updatedUser = await user.save();
-  res.json({ message: `${updatedUser.username} updated ` });
+  res.json({
+    message: `${updatedUser.username || updatedUser.fullName} updated`,
+  });
 });
 const getUser = asyncHandler(async (req, res) => {
   const { id } = req.params; // Extract the user ID from the request parameters
@@ -157,14 +180,14 @@ const getUser = asyncHandler(async (req, res) => {
 // @route GET /user/profile
 // @access Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  const username = req.user;
+  const email = req.user;
 
-  if (!username) {
+  if (!email) {
     return res.status(400).json({ message: "User not found in token" });
   }
 
   // Find the user
-  const user = await User.findOne({ username }).select("-password").exec();
+  const user = await User.findOne({ email }).select("-password").exec();
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
@@ -190,7 +213,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 //@route PATCH /users/profile
 //@access Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  const username = req.user;
+  const userEmail = req.user;
   const {
     firstName,
     lastName,
@@ -202,12 +225,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     location,
   } = req.body;
 
-  if (!username) {
+  if (!userEmail) {
     return res.status(400).json({ message: "User not found in token" });
   }
 
   // Find the user
-  const user = await User.findOne({ username }).exec();
+  const user = await User.findOne({ email: userEmail }).exec();
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
@@ -255,11 +278,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 //@access Private
 // Admin and user
 const deleteUser = asyncHandler(async (req, res) => {
-  const username = req.user;
+  const email = req.user;
   const roles = req.roles;
-  const { id } = req.body;
+  // Support both URL params and body for backwards compatibility
+  const id = req.params.id || req.body.id;
 
-  if (!username) {
+  if (!email) {
     return res.status(400).json({ message: "User not found in token" });
   }
 
@@ -268,6 +292,10 @@ const deleteUser = asyncHandler(async (req, res) => {
     return res
       .status(403)
       .json({ message: "Unauthorized - Admin access only" });
+  }
+
+  if (!id) {
+    return res.status(400).json({ message: "User ID required" });
   }
 
   // Does the user exist to delete?
@@ -288,6 +316,153 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc Create new employee
+//@route POST /users/employee
+//@access Private (Admin only)
+const createEmployee = asyncHandler(async (req, res) => {
+  const {
+    fullName,
+    email,
+    phoneNumber,
+    password,
+    employeeCode,
+    fingerprintCode,
+    jobPosition,
+    branch,
+  } = req.body;
+
+  // Validate required fields
+  if (
+    !fullName ||
+    !email ||
+    !phoneNumber ||
+    !password ||
+    !employeeCode ||
+    !fingerprintCode ||
+    !jobPosition
+  ) {
+    return res.status(400).json({
+      message: "All fields are required",
+      required: [
+        "fullName",
+        "email",
+        "phoneNumber",
+        "password",
+        "employeeCode",
+        "fingerprintCode",
+        "jobPosition",
+      ],
+    });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
+  // Validate password length
+  if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters" });
+  }
+
+  // Check for duplicate email
+  const duplicateEmail = await User.findOne({ email })
+    .collation({ locale: "en", strength: 2 })
+    .lean()
+    .exec();
+
+  if (duplicateEmail) {
+    return res.status(409).json({ message: "Email already exists" });
+  }
+
+  // Check for duplicate employee code
+  const duplicateEmployeeCode = await User.findOne({ employeeCode })
+    .collation({ locale: "en", strength: 2 })
+    .lean()
+    .exec();
+
+  if (duplicateEmployeeCode) {
+    return res.status(409).json({ message: "Employee code already exists" });
+  }
+
+  // Check for duplicate fingerprint code
+  const duplicateFingerprint = await User.findOne({ fingerprintCode })
+    .collation({ locale: "en", strength: 2 })
+    .lean()
+    .exec();
+
+  if (duplicateFingerprint) {
+    return res.status(409).json({ message: "Fingerprint code already exists" });
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const encrypted = encryptPassword(password);
+
+  // Create employee object
+  const employeeObject = {
+    username: fullName, // Using fullName as username for backward compatibility
+    fullName,
+    email,
+    phonenumber: phoneNumber,
+    password: hashedPassword,
+    encryptedPassword: encrypted,
+    employeeCode,
+    fingerprintCode,
+    jobPosition,
+    branch: branch || "المركز الرئيسي",
+    roles: ["user"], // Default role
+    active: true,
+  };
+
+  // Create and store the new employee
+  const employee = await User.create(employeeObject);
+
+  if (employee) {
+    res.status(201).json({
+      message: "Employee created successfully",
+      employee: {
+        id: employee._id,
+        fullName: employee.fullName,
+        email: employee.email,
+        employeeCode: employee.employeeCode,
+        fingerprintCode: employee.fingerprintCode,
+        jobPosition: employee.jobPosition,
+        branch: employee.branch,
+      },
+    });
+  } else {
+    res.status(400).json({ message: "Failed to create employee" });
+  }
+});
+
+//@desc Get all employees (for dropdowns)
+//@route GET /users/employees
+//@access Private (all authenticated users)
+const getAllEmployees = asyncHandler(async (req, res) => {
+  // Fetch only users with employeeCode (actual employees)
+  const employees = await User.find({
+    employeeCode: { $exists: true, $ne: null },
+  })
+    .select(
+      "fullName email phonenumber employeeCode fingerprintCode jobPosition branch encryptedPassword"
+    )
+    .lean();
+
+  // Decrypt passwords for employees
+  const employeesWithDecrypted = employees.map((emp) => ({
+    ...emp,
+    decryptedPassword: emp.encryptedPassword
+      ? decryptPassword(emp.encryptedPassword)
+      : "Not Set",
+  }));
+
+  res.json(employeesWithDecrypted);
+});
+
 module.exports = {
   getallUsers,
   createNewUser,
@@ -296,4 +471,6 @@ module.exports = {
   getUser,
   getUserProfile,
   updateUserProfile,
+  createEmployee,
+  getAllEmployees,
 };

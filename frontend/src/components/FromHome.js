@@ -459,43 +459,41 @@ const AddFromHome = () => {
                     {weekDays.map((day) => {
                       const isFriday = day.dayShort === "Fri";
                       return (
-                        <th
-                          key={day.date}
+                      <th
+                        key={day.date}
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                          color: isFriday ? "#ef4444" : "#ffffff",
+                          fontWeight: "600",
+                          fontSize: "0.875rem",
+                          minWidth: "100px",
+                          background: isFriday ? "rgba(239, 68, 68, 0.1)" : "transparent",
+                        }}
+                      >
+                        <div>{day.dayShort}</div>
+                        <div
                           style={{
-                            padding: "1rem",
-                            textAlign: "center",
-                            color: isFriday ? "#ef4444" : "#ffffff",
-                            fontWeight: "600",
-                            fontSize: "0.875rem",
-                            minWidth: "100px",
-                            background: isFriday
-                              ? "rgba(239, 68, 68, 0.1)"
-                              : "transparent",
+                            fontSize: "0.75rem",
+                            color: isFriday ? "#ef4444" : "#9ca3af",
+                            fontWeight: "400",
                           }}
                         >
-                          <div>{day.dayShort}</div>
+                          {new Date(day.date).getDate()}
+                        </div>
+                        {isFriday && (
                           <div
                             style={{
-                              fontSize: "0.75rem",
-                              color: isFriday ? "#ef4444" : "#9ca3af",
-                              fontWeight: "400",
+                              fontSize: "0.625rem",
+                              color: "#ef4444",
+                              fontWeight: "600",
+                              marginTop: "0.25rem",
                             }}
                           >
-                            {new Date(day.date).getDate()}
+                            Holiday
                           </div>
-                          {isFriday && (
-                            <div
-                              style={{
-                                fontSize: "0.625rem",
-                                color: "#ef4444",
-                                fontWeight: "600",
-                                marginTop: "0.25rem",
-                              }}
-                            >
-                              Holiday
-                            </div>
-                          )}
-                        </th>
+                        )}
+                      </th>
                       );
                     })}
                   </tr>
@@ -544,58 +542,52 @@ const AddFromHome = () => {
                         )}
                       </td>
                       {employee.weekSchedule.map((daySchedule) => {
-                        const isFriday =
-                          new Date(daySchedule.date).getDay() === 5;
+                        const isFriday = new Date(daySchedule.date).getDay() === 5;
                         return (
-                          <td
-                            key={daySchedule.date}
-                            style={{
-                              padding: "1rem",
-                              textAlign: "center",
-                              fontSize: "0.875rem",
-                              background: isFriday
-                                ? "rgba(239, 68, 68, 0.05)"
-                                : "transparent",
-                            }}
-                          >
-                            {isFriday ? (
-                              <div
-                                style={{
-                                  color: "#ef4444",
-                                  fontSize: "0.75rem",
-                                  fontWeight: "600",
-                                }}
-                              >
-                                Holiday
-                              </div>
-                            ) : daySchedule.isWFH ? (
-                              <div
-                                style={{
-                                  background: "#10b981",
-                                  color: "#ffffff",
-                                  padding: "0.25rem 0.5rem",
-                                  borderRadius: "0.25rem",
-                                  fontSize: "0.75rem",
-                                  fontWeight: "600",
-                                  display: "inline-block",
-                                }}
-                                title={daySchedule.purpose || "Work From Home"}
-                              >
-                                {daySchedule.type === "WFH"
-                                  ? "العمل من المنزل"
-                                  : "إجازة"}
-                              </div>
-                            ) : (
-                              <div
-                                style={{
-                                  color: "#4a4a4a",
-                                  fontSize: "1.25rem",
-                                }}
-                              >
-                                -
-                              </div>
-                            )}
-                          </td>
+                        <td
+                          key={daySchedule.date}
+                          style={{
+                            padding: "1rem",
+                            textAlign: "center",
+                            fontSize: "0.875rem",
+                            background: isFriday ? "rgba(239, 68, 68, 0.05)" : "transparent",
+                          }}
+                        >
+                          {isFriday ? (
+                            <div
+                              style={{
+                                color: "#ef4444",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                              }}
+                            >
+                              Holiday
+                            </div>
+                          ) : daySchedule.isWFH ? (
+                            <div
+                              style={{
+                                background: "#10b981",
+                                color: "#ffffff",
+                                padding: "0.25rem 0.5rem",
+                                borderRadius: "0.25rem",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                display: "inline-block",
+                              }}
+                              title={daySchedule.purpose || "Work From Home"}
+                            >
+                              {daySchedule.type === "WFH"
+                                ? "العمل من المنزل"
+                                : "إجازة"}
+                            </div>
+                          ) : (
+                            <div
+                              style={{ color: "#4a4a4a", fontSize: "1.25rem" }}
+                            >
+                              -
+                            </div>
+                          )}
+                        </td>
                         );
                       })}
                     </tr>

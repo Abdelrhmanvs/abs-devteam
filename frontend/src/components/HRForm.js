@@ -24,92 +24,19 @@ const HRForm = () => {
   const fetchApprovedRequests = async () => {
     try {
       setLoading(true);
-      // Fetch approved requests from backend
-      const response = await axiosPrivate.get("/requests?status=approved");
+      const response = await axiosPrivate.get("/requests/approved");
 
-      if (response?.data?.requests) {
-        // Transform requests into HR form rows
-        const transformedData = response.data.requests.map(
-          (request, index) => ({
-            id: request._id || index,
-            code: request.code || `REQ${String(index + 1).padStart(4, "0")}`,
-            fingerprint:
-              request.user?.fingerprintCode || request.fingerprintCode || "",
-            employeeName: request.user?.name || request.employeeName || "",
-            jobPosition: request.user?.jobTitle || request.jobPosition || "",
-            branch:
-              request.user?.branch ||
-              request.user?.department ||
-              request.branch ||
-              "",
-            timeOffType: request.type || request.requestType || "",
-            purpose: request.reason || request.notes || "",
-            startDate: formatDate(request.startDate),
-            endDate: formatDate(request.endDate),
-            numberOfDays: calculateDays(request.startDate, request.endDate),
-          })
-        );
-        setHrData(transformedData);
+      if (response?.data && Array.isArray(response.data)) {
+        setHrData(response.data);
       } else {
-        // Use sample data if no backend data
-        setHrData(getSampleData());
+        setHrData([]);
       }
     } catch (error) {
       console.error("Error fetching approved requests:", error);
-      // Use sample data on error
-      setHrData(getSampleData());
+      setHrData([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Sample data for demonstration
-  const getSampleData = () => [
-    {
-      id: 1,
-      code: "REQ0001",
-      fingerprint: "FP001",
-      employeeName: "John Doe",
-      jobPosition: "Software Engineer",
-      branch: "Engineering",
-      timeOffType: "WFH",
-      purpose: "Working on project documentation",
-      startDate: "2023-10-15",
-      endDate: "2023-10-15",
-      numberOfDays: "1",
-    },
-    {
-      id: 2,
-      code: "REQ0004",
-      fingerprint: "FP004",
-      employeeName: "Jane Smith",
-      jobPosition: "Sales Manager",
-      branch: "Sales",
-      timeOffType: "Mission",
-      purpose: "Conference attendance",
-      startDate: "2023-10-22",
-      endDate: "2023-10-23",
-      numberOfDays: "2",
-    },
-    {
-      id: 3,
-      code: "REQ0007",
-      fingerprint: "FP007",
-      employeeName: "Robert Johnson",
-      jobPosition: "Product Manager",
-      branch: "Product",
-      timeOffType: "WFH",
-      purpose: "Product planning session",
-      startDate: "2023-10-26",
-      endDate: "2023-10-27",
-      numberOfDays: "2",
-    },
-  ];
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().split("T")[0]; // YYYY-MM-DD format
   };
 
   const calculateDays = (startDate, endDate) => {
@@ -154,6 +81,57 @@ const HRForm = () => {
   const handleKeyDown = (e, rowId, field) => {
     if (e.key === "Enter") {
       setEditingCell(null);
+    }
+  };
+
+  const handleDelete = async (requestId) => {
+    if (!window.confirm("Are you sure you want to delete this request?")) {
+      return;
+    }
+
+    try {
+      await axiosPrivate.delete(`/requests/${requestId}`);
+      // Remove the deleted item from state
+      setHrData((prevData) => prevData.filter((row) => row.id !== requestId));
+    } catch (error) {
+      console.error("Error deleting request:", error);
+      alert(error.response?.data?.message || "Failed to delete request");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (
+      !window.confirm(
+        "⚠️ WARNING: This will permanently delete ALL approved requests in the HR Form!\n\nAre you absolutely sure you want to continue?"
+      )
+    ) {
+      return;
+    }
+
+    // Double confirmation
+    if (
+      !window.confirm(
+        "This action CANNOT be undone. Type confirmations are not available in this dialog.\n\nClick OK to proceed with deletion."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axiosPrivate.delete("/requests/all");
+
+      // Clear all data from state
+      setHrData([]);
+
+      alert(
+        `Successfully deleted ${response.data.deletedCount} approved requests.`
+      );
+    } catch (error) {
+      console.error("Error deleting all requests:", error);
+      alert(error.response?.data?.message || "Failed to delete all requests");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -442,6 +420,40 @@ const HRForm = () => {
                 <i className="fas fa-file-excel"></i>
                 Export to Excel
               </button>
+
+              {/* Delete All Button */}
+              <button
+                onClick={handleDeleteAll}
+                disabled={hrData.length === 0}
+                style={{
+                  background: hrData.length === 0 ? "#6b7280" : "#ef4444",
+                  color: "#ffffff",
+                  padding: "0.75rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  border: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: "600",
+                  cursor: hrData.length === 0 ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  transition: "background 0.2s",
+                  opacity: hrData.length === 0 ? 0.5 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (hrData.length > 0) {
+                    e.target.style.background = "#dc2626";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (hrData.length > 0) {
+                    e.target.style.background = "#ef4444";
+                  }
+                }}
+              >
+                <i className="fas fa-trash-alt"></i>
+                Delete All
+              </button>
             </div>
           </div>
 
@@ -603,6 +615,18 @@ const HRForm = () => {
                     >
                       عدد الأيام
                     </th>
+                    <th
+                      style={{
+                        textAlign: "center",
+                        padding: "1rem",
+                        color: "#9ca3af",
+                        fontWeight: "500",
+                        fontSize: "0.875rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -703,6 +727,38 @@ const HRForm = () => {
                         }}
                       >
                         {renderEditableCell(row, "numberOfDays")}
+                      </td>
+                      <td
+                        style={{
+                          padding: "1rem",
+                          textAlign: "center",
+                        }}
+                      >
+                        <button
+                          onClick={() => handleDelete(row.id)}
+                          style={{
+                            background: "#ef4444",
+                            color: "#ffffff",
+                            border: "none",
+                            borderRadius: "0.375rem",
+                            padding: "0.5rem 0.75rem",
+                            fontSize: "0.875rem",
+                            cursor: "pointer",
+                            transition: "background 0.2s",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = "#dc2626";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = "#ef4444";
+                          }}
+                        >
+                          <i className="fas fa-trash"></i>
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}

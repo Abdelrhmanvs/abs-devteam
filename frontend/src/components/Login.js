@@ -31,7 +31,7 @@ const Login = () => {
     try {
       const response = await axios.post(
         LOGIN_URL,
-        JSON.stringify({ username: user, password: pwd }),
+        JSON.stringify({ email: user, password: pwd }),
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
@@ -40,16 +40,15 @@ const Login = () => {
 
       const accessToken = response?.data?.accessToken;
       const roles = response?.data?.roles;
+      const email = response?.data?.email;
 
-      setAuth({ user, roles, accessToken });
-      resetUser();
-      setPwd("");
+      setAuth({ user: email, roles, accessToken });
       navigate(from, { replace: true });
     } catch (err) {
       if (!err?.response) {
         setErrMsg("No Server Response");
       } else if (err.response?.status === 400) {
-        setErrMsg("Missing Username or Password");
+        setErrMsg("Missing Email or Password");
       } else if (err.response?.status === 401) {
         setErrMsg("Unauthorized");
       } else {
@@ -97,21 +96,21 @@ const Login = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email/Username Field */}
+          {/* Email Field */}
           <div>
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="block text-sm font-medium mb-2 text-white"
             >
-              Email / Username
+              Email
             </label>
             <input
-              type="text"
-              id="username"
+              type="email"
+              id="email"
               ref={userRef}
               autoComplete="off"
               {...userAttribs}
-              placeholder="Enter your email or username"
+              placeholder="Enter your email"
               className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
               style={{
                 background: "#3a3a3a",
@@ -154,6 +153,26 @@ const Login = () => {
                 ></i>
               </button>
             </div>
+          </div>
+
+          {/* Remember Me Checkbox */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="persist"
+              checked={persist}
+              onChange={togglePersist}
+              className="w-4 h-4 rounded border-gray-600 bg-gray-700 focus:ring-2 focus:ring-orange-500 cursor-pointer"
+              style={{
+                accentColor: "#f97316",
+              }}
+            />
+            <label
+              htmlFor="persist"
+              className="ml-2 text-sm text-gray-300 cursor-pointer select-none"
+            >
+              Remember me
+            </label>
           </div>
 
           {/* Login Button */}

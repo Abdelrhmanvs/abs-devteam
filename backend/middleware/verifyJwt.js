@@ -16,7 +16,7 @@ const verifyJWT = (req, res, next) => {
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (!err && decoded?.UserInfo) {
       // ✅ Valid access token
-      req.user = decoded.UserInfo.username;
+      req.user = decoded.UserInfo.email;
       req.roles = decoded.UserInfo.roles;
       return next();
     }
@@ -30,7 +30,7 @@ const verifyJWT = (req, res, next) => {
       }
 
       // ✅ Valid refresh token
-      req.user = decoded2?.username || decoded2?.UserInfo?.username;
+      req.user = decoded2?.email || decoded2?.UserInfo?.email;
       req.roles = decoded2?.UserInfo?.roles || [];
       next();
     });

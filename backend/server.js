@@ -24,7 +24,7 @@ console.log(process.env.NODE_ENV);
 
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/users", require("./routes/userRoutes"));
-app.use("/reports", require("./routes/reportRoutes"));
+app.use("/requests", require("./routes/reportRoutes"));
 
 app.all("*", (req, res) => {
   res.status(404).json({ message: "404 not found" });

@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
+
 const userSchema = new mongoose.Schema({
+  // Legacy fields (kept for backward compatibility)
   username: {
     type: String,
     required: true,
@@ -36,6 +38,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "123",
   },
+  encryptedPassword: {
+    type: String,
+    default: "",
+  },
   country: {
     type: String,
     default: "country",
@@ -52,6 +58,38 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+
+  // New Employee-specific fields
+  fullName: {
+    type: String,
+    required: function () {
+      // Only required if employeeCode exists (i.e., this is an employee)
+      return !!this.employeeCode;
+    },
+    trim: true,
+  },
+  employeeCode: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows null/undefined while maintaining uniqueness for non-null values
+    trim: true,
+  },
+  fingerprintCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+  },
+  jobPosition: {
+    type: String,
+    trim: true,
+  },
+  branch: {
+    type: String,
+    default: "المركز الرئيسي",
+    trim: true,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
@@ -61,4 +99,10 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Indexes for better query performance
+userSchema.index({ employeeCode: 1 });
+userSchema.index({ email: 1 });
+userSchema.index({ fingerprintCode: 1 });
+
 module.exports = mongoose.model("User", userSchema);

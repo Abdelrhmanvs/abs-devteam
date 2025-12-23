@@ -14,6 +14,9 @@ const UpperNav = () => {
     navigate("/login");
   };
 
+  // Check if user is admin
+  const isAdmin = auth?.roles?.includes("admin");
+
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       {/* Sidebar */}
@@ -95,71 +98,76 @@ const UpperNav = () => {
             <span style={{ fontWeight: "500" }}>Requests</span>
           </NavLink>
 
-          <NavLink
-            to="/hr-form"
-            style={({ isActive }) => ({
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              padding: "0.75rem 1.5rem",
-              color: isActive ? "#f97316" : "#9ca3af",
-              textDecoration: "none",
-              background: isActive ? "#3a3a3a" : "transparent",
-              borderLeft: isActive
-                ? "3px solid #f97316"
-                : "3px solid transparent",
-              transition: "all 0.2s",
-            })}
-          >
-            <i
-              className="fas fa-clipboard"
-              style={{ fontSize: "1.125rem" }}
-            ></i>
-            <span style={{ fontWeight: "500" }}>HR Form</span>
-          </NavLink>
+          {/* Admin-only pages */}
+          {isAdmin && (
+            <>
+              <NavLink
+                to="/hr-form"
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "0.75rem 1.5rem",
+                  color: isActive ? "#f97316" : "#9ca3af",
+                  textDecoration: "none",
+                  background: isActive ? "#3a3a3a" : "transparent",
+                  borderLeft: isActive
+                    ? "3px solid #f97316"
+                    : "3px solid transparent",
+                  transition: "all 0.2s",
+                })}
+              >
+                <i
+                  className="fas fa-clipboard"
+                  style={{ fontSize: "1.125rem" }}
+                ></i>
+                <span style={{ fontWeight: "500" }}>HR Form</span>
+              </NavLink>
 
-          <NavLink
-            to="/add-employee"
-            style={({ isActive }) => ({
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              padding: "0.75rem 1.5rem",
-              color: isActive ? "#f97316" : "#9ca3af",
-              textDecoration: "none",
-              background: isActive ? "#3a3a3a" : "transparent",
-              borderLeft: isActive
-                ? "3px solid #f97316"
-                : "3px solid transparent",
-              transition: "all 0.2s",
-            })}
-          >
-            <i
-              className="fas fa-user-plus"
-              style={{ fontSize: "1.125rem" }}
-            ></i>
-            <span style={{ fontWeight: "500" }}>Add Employee</span>
-          </NavLink>
+              <NavLink
+                to="/add-employee"
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "0.75rem 1.5rem",
+                  color: isActive ? "#f97316" : "#9ca3af",
+                  textDecoration: "none",
+                  background: isActive ? "#3a3a3a" : "transparent",
+                  borderLeft: isActive
+                    ? "3px solid #f97316"
+                    : "3px solid transparent",
+                  transition: "all 0.2s",
+                })}
+              >
+                <i
+                  className="fas fa-user-plus"
+                  style={{ fontSize: "1.125rem" }}
+                ></i>
+                <span style={{ fontWeight: "500" }}>Employees</span>
+              </NavLink>
 
-          <NavLink
-            to="/add-from-home"
-            style={({ isActive }) => ({
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              padding: "0.75rem 1.5rem",
-              color: isActive ? "#f97316" : "#9ca3af",
-              textDecoration: "none",
-              background: isActive ? "#3a3a3a" : "transparent",
-              borderLeft: isActive
-                ? "3px solid #f97316"
-                : "3px solid transparent",
-              transition: "all 0.2s",
-            })}
-          >
-            <i className="fas fa-home" style={{ fontSize: "1.125rem" }}></i>
-            <span style={{ fontWeight: "500" }}>Add From Home</span>
-          </NavLink>
+              <NavLink
+                to="/add-from-home"
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "0.75rem 1.5rem",
+                  color: isActive ? "#f97316" : "#9ca3af",
+                  textDecoration: "none",
+                  background: isActive ? "#3a3a3a" : "transparent",
+                  borderLeft: isActive
+                    ? "3px solid #f97316"
+                    : "3px solid transparent",
+                  transition: "all 0.2s",
+                })}
+              >
+                <i className="fas fa-home" style={{ fontSize: "1.125rem" }}></i>
+                <span style={{ fontWeight: "500" }}>From Home</span>
+              </NavLink>
+            </>
+          )}
         </nav>
 
         {/* User Profile & Logout Section */}
@@ -186,7 +194,7 @@ const UpperNav = () => {
                 fontSize: "0.875rem",
               }}
             >
-              {auth?.user?.substring(0, 2).toUpperCase() || "JD"}
+              {auth?.user ? auth.user.substring(0, 2).toUpperCase() : "JD"}
             </div>
             <div style={{ flex: 1 }}>
               <div
@@ -199,7 +207,7 @@ const UpperNav = () => {
                 {auth?.user || "John Doe"}
               </div>
               <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>
-                Employee
+                {isAdmin ? "Admin" : "Employee"}
               </div>
             </div>
           </div>

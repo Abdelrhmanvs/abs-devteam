@@ -1,45 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const reportsController = require("../controllers/reports");
+const requestsController = require("../controllers/requests");
 const verifyJwt = require("../middleware/verifyJwt");
-
-// Configure multer for memory storage
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 500 * 1024 * 1024, // 500MB limit (increased to handle large medical images)
-  },
-  fileFilter: (req, file, cb) => {
-    // Accept image files only
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed"), false);
-    }
-  },
-});
 
 router.use(verifyJwt);
 
-// AI Analysis endpoint with file upload
-router.post(
-  "/analyze",
-  upload.single("xrayImage"),
-  reportsController.analyzeXray
-);
-
+// HR Request Management Routes
 router
   .route("/")
-  .get(reportsController.getUserReports)
-  .post(reportsController.createReport);
+  .post(requestsController.createRequest)
+  .get(requestsController.getAllRequests);
 
-router.route("/stats").get(reportsController.getUserStats);
-
+router.route("/my").get(requestsController.getMyRequests);
+router.route("/week").get(requestsController.getWeekSchedule);
+router.route("/approved").get(requestsController.getApprovedRequests);
+router.route("/weekly-wfh").get(requestsController.getWeeklyWFH);
+router.route("/random-wfh").post(requestsController.generateRandomWFH);
+router.route("/all").delete(requestsController.deleteAllRequests);
 router
   .route("/:id")
-  .get(reportsController.getReport)
-  .delete(reportsController.deleteReport);
+  .patch(requestsController.updateRequestStatus)
+  .delete(requestsController.deleteRequest);
 
 module.exports = router;

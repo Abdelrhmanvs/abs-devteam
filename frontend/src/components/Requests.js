@@ -8,45 +8,67 @@ const Requests = () => {
   const { auth } = useAuth();
   const axiosPrivate = useAxiosPrivate();
 
-  const [requests, setRequests] = useState([
-    {
-      id: 1,
-      type: "WFH",
-      date: "Oct 15, 2023",
-      status: "Approved",
-    },
-    {
-      id: 2,
-      type: "Mission",
-      date: "Oct 18, 2023",
-      status: "Pending",
-    },
-    {
-      id: 3,
-      type: "WFH",
-      date: "Oct 10, 2023",
-      status: "Rejected",
-    },
-    {
-      id: 4,
-      type: "Mission",
-      date: "Oct 22, 2023",
-      status: "Approved",
-    },
-    {
-      id: 5,
-      type: "WFH",
-      date: "Oct 25, 2023",
-      status: "Pending",
-    },
-  ]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        // Admin sees all requests, regular users see only their own
+        const endpoint = auth?.roles?.includes("admin")
+          ? "/requests"
+          : "/requests/my";
+        const response = await axiosPrivate.get(endpoint);
+        const formattedRequests = response.data.map((req) => ({
+          id: req._id,
+          type: req.type,
+          startDate: new Date(req.startDate).toLocaleDateString(),
+          endDate: new Date(req.endDate).toLocaleDateString(),
+          numberOfDays: req.numberOfDays,
+          status: req.status,
+          notes: req.notes,
+          employeeName:
+            req.employeeName || req.employeeId?.fullName || "Unknown",
+        }));
+        setRequests(formattedRequests);
+      } catch (error) {
+        console.error("Error fetching requests:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRequests();
+  }, [auth?.roles]);
+
+  // Fetch employees for custom request (admin only)
+  useEffect(() => {
+    if (auth?.roles?.includes("admin")) {
+      const fetchEmployees = async () => {
+        try {
+          const response = await axiosPrivate.get("/users/employees");
+          setEmployees(response.data);
+        } catch (error) {
+          console.error("Error fetching employees:", error);
+        }
+      };
+      fetchEmployees();
+    }
+  }, [auth?.roles, axiosPrivate]);
 
   const [showModal, setShowModal] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [employees, setEmployees] = useState([]);
   const [formData, setFormData] = useState({
     requestType: "",
     startDate: "",
     endDate: "",
-    notes: "",
+  });
+  const [customFormData, setCustomFormData] = useState({
+    employeeId: "",
+    requestType: "",
+    startDate: "",
+    endDate: "",
   });
 
   const getStatusColor = (status) => {
@@ -66,13 +88,26 @@ const Requests = () => {
     setShowModal(true);
   };
 
+  const handleCustomRequest = () => {
+    setShowCustomModal(true);
+  };
+
   const handleCloseModal = () => {
     setShowModal(false);
     setFormData({
       requestType: "",
       startDate: "",
       endDate: "",
-      notes: "",
+    });
+  };
+
+  const handleCloseCustomModal = () => {
+    setShowCustomModal(false);
+    setCustomFormData({
+      employeeId: "",
+      requestType: "",
+      startDate: "",
+      endDate: "",
     });
   };
 
@@ -84,27 +119,167 @@ const Requests = () => {
     }));
   };
 
-  const handleSubmitRequest = async (e) => {
+  const handleCustomFormChange = (e) => {
+    const { name, value } = e.target;
+    setCustomFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmitCustomRequest = async (e) => {
     e.preventDefault();
+
+    if (
+      !customFormData.employeeId ||
+      !customFormData.requestType ||
+      !customFormData.startDate ||
+      !customFormData.endDate
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // await axiosPrivate.post("/requests", formData);
-      console.log("Submitting request:", formData);
-      handleCloseModal();
-      // Refresh requests or show success message
+      const start = new Date(customFormData.startDate);
+      const end = new Date(customFormData.endDate);
+      const numberOfDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+      const requestData = {
+        employeeId: customFormData.employeeId,
+        type: customFormData.requestType,
+        startDate: customFormData.startDate,
+        endDate: customFormData.endDate,
+        numberOfDays: numberOfDays,
+      };
+
+      await axiosPrivate.post("/requests/admin", requestData);
+      handleCloseCustomModal();
+
+      // Refresh requests list
+      const endpoint = auth?.roles?.includes("admin")
+        ? "/requests"
+        : "/requests/my";
+      const response = await axiosPrivate.get(endpoint);
+      const formattedRequests = response.data.map((req) => ({
+        id: req._id,
+        type: req.type,
+        startDate: new Date(req.startDate).toLocaleDateString(),
+        endDate: new Date(req.endDate).toLocaleDateString(),
+        numberOfDays: req.numberOfDays,
+        status: req.status,
+        notes: req.notes,
+        employeeName: req.employeeName || req.employeeId?.fullName || "Unknown",
+      }));
+      setRequests(formattedRequests);
     } catch (error) {
-      console.error("Error submitting request:", error);
+      console.error("Error creating custom request:", error);
+      alert(
+        error.response?.data?.message ||
+          "Failed to create request. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleApprove = (id) => {
-    console.log("Approve request:", id);
-    // Add approval logic here
+  const handleSubmitRequest = async (e) => {
+    e.preventDefault();
+    if (!formData.requestType || !formData.startDate || !formData.endDate) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      const numberOfDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+      const requestData = {
+        type: formData.requestType,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        numberOfDays: numberOfDays,
+      };
+
+      await axiosPrivate.post("/requests", requestData);
+      handleCloseModal();
+
+      // Refresh requests list
+      const endpoint = auth?.roles?.includes("admin")
+        ? "/requests"
+        : "/requests/my";
+      const response = await axiosPrivate.get(endpoint);
+      const formattedRequests = response.data.map((req) => ({
+        id: req._id,
+        type: req.type,
+        startDate: new Date(req.startDate).toLocaleDateString(),
+        endDate: new Date(req.endDate).toLocaleDateString(),
+        numberOfDays: req.numberOfDays,
+        status: req.status,
+        notes: req.notes,
+        employeeName: req.employeeName || req.employeeId?.fullName || "Unknown",
+      }));
+      setRequests(formattedRequests);
+    } catch (error) {
+      console.error("Error submitting request:", error);
+      alert(error.response?.data?.message || "Failed to create request");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (id) => {
-    console.log("Reject request:", id);
-    // Add rejection logic here
+  const handleApprove = async (id) => {
+    try {
+      await axiosPrivate.patch(`/requests/${id}`, { status: "Approved" });
+
+      // Refresh requests list
+      const endpoint = auth?.roles?.includes("admin")
+        ? "/requests"
+        : "/requests/my";
+      const response = await axiosPrivate.get(endpoint);
+      const formattedRequests = response.data.map((req) => ({
+        id: req._id,
+        type: req.type,
+        startDate: new Date(req.startDate).toLocaleDateString(),
+        endDate: new Date(req.endDate).toLocaleDateString(),
+        numberOfDays: req.numberOfDays,
+        status: req.status,
+        notes: req.notes,
+        employeeName: req.employeeName || req.employeeId?.fullName || "Unknown",
+      }));
+      setRequests(formattedRequests);
+    } catch (error) {
+      console.error("Error approving request:", error);
+      alert(error.response?.data?.message || "Failed to approve request");
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await axiosPrivate.patch(`/requests/${id}`, { status: "Rejected" });
+
+      // Refresh requests list
+      const endpoint = auth?.roles?.includes("admin")
+        ? "/requests"
+        : "/requests/my";
+      const response = await axiosPrivate.get(endpoint);
+      const formattedRequests = response.data.map((req) => ({
+        id: req._id,
+        type: req.type,
+        startDate: new Date(req.startDate).toLocaleDateString(),
+        endDate: new Date(req.endDate).toLocaleDateString(),
+        numberOfDays: req.numberOfDays,
+        status: req.status,
+        notes: req.notes,
+        employeeName: req.employeeName || req.employeeId?.fullName || "Unknown",
+      }));
+      setRequests(formattedRequests);
+    } catch (error) {
+      console.error("Error rejecting request:", error);
+      alert(error.response?.data?.message || "Failed to reject request");
+    }
   };
 
   return (
@@ -143,190 +318,293 @@ const Requests = () => {
           >
             All Requests
           </h2>
-          <button
-            onClick={handleNewRequest}
-            style={{
-              background: "#f97316",
-              color: "#ffffff",
-              padding: "0.75rem 1.5rem",
-              borderRadius: "0.5rem",
-              border: "none",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "#ea580c";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "#f97316";
-            }}
-          >
-            <span style={{ fontSize: "1rem" }}>+</span>
-            New Request
-          </button>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            {!auth?.roles?.includes("admin") && (
+              <button
+                onClick={handleNewRequest}
+                style={{
+                  background: "#f97316",
+                  color: "#ffffff",
+                  padding: "0.75rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  border: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#ea580c";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#f97316";
+                }}
+              >
+                <span style={{ fontSize: "1rem" }}>+</span>
+                New Request
+              </button>
+            )}
+            {auth?.roles?.includes("admin") && (
+              <button
+                onClick={handleCustomRequest}
+                style={{
+                  background: "#f97316",
+                  color: "#ffffff",
+                  padding: "0.75rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  border: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#ea580c";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#f97316";
+                }}
+              >
+                <span style={{ fontSize: "1rem" }}>+</span>
+                Custom Request
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table
+        {loading ? (
+          <div
             style={{
-              width: "100%",
-              borderCollapse: "collapse",
+              textAlign: "center",
+              padding: "2rem",
+              color: "#9ca3af",
             }}
           >
-            <thead>
-              <tr
-                style={{
-                  borderBottom: "1px solid #404040",
-                }}
-              >
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "1rem",
-                    color: "#9ca3af",
-                    fontWeight: "500",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Request Type
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "1rem",
-                    color: "#9ca3af",
-                    fontWeight: "500",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Date
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "1rem",
-                    color: "#9ca3af",
-                    fontWeight: "500",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    padding: "1rem",
-                    color: "#9ca3af",
-                    fontWeight: "500",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((request) => (
+            Loading requests...
+          </div>
+        ) : requests.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "2rem",
+              color: "#9ca3af",
+            }}
+          >
+            No requests found
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
                 <tr
-                  key={request.id}
                   style={{
                     borderBottom: "1px solid #404040",
                   }}
                 >
-                  <td
-                    style={{
-                      padding: "1rem",
-                      color: "#ffffff",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {request.type}
-                  </td>
-                  <td
-                    style={{
-                      padding: "1rem",
-                      color: "#ffffff",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {request.date}
-                  </td>
-                  <td style={{ padding: "1rem" }}>
-                    <span
+                  {auth?.roles?.includes("admin") && (
+                    <th
                       style={{
-                        display: "inline-block",
-                        padding: "0.375rem 0.75rem",
-                        borderRadius: "0.375rem",
-                        fontSize: "0.75rem",
-                        fontWeight: "600",
-                        background: `${getStatusColor(request.status)}20`,
-                        color: getStatusColor(request.status),
+                        textAlign: "left",
+                        padding: "1rem",
+                        color: "#9ca3af",
+                        fontWeight: "500",
+                        fontSize: "0.875rem",
                       }}
                     >
-                      {request.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: "1rem" }}>
-                    {request.status === "Pending" && (
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button
-                          onClick={() => handleApprove(request.id)}
-                          style={{
-                            background: "#10b981",
-                            color: "#ffffff",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "0.375rem",
-                            border: "none",
-                            fontSize: "0.75rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "background 0.2s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.background = "#059669";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.background = "#10b981";
-                          }}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleReject(request.id)}
-                          style={{
-                            background: "#ef4444",
-                            color: "#ffffff",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "0.375rem",
-                            border: "none",
-                            fontSize: "0.75rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "background 0.2s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.background = "#dc2626";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.background = "#ef4444";
-                          }}
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                      Employee
+                    </th>
+                  )}
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "1rem",
+                      color: "#9ca3af",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Request Type
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "1rem",
+                      color: "#9ca3af",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Date Range
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "1rem",
+                      color: "#9ca3af",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Days
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "1rem",
+                      color: "#9ca3af",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Status
+                  </th>
+                  {auth?.roles?.includes("admin") && (
+                    <th
+                      style={{
+                        textAlign: "left",
+                        padding: "1rem",
+                        color: "#9ca3af",
+                        fontWeight: "500",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {requests.map((request) => (
+                  <tr
+                    key={request.id}
+                    style={{
+                      borderBottom: "1px solid #404040",
+                    }}
+                  >
+                    {auth?.roles?.includes("admin") && (
+                      <td
+                        style={{
+                          padding: "1rem",
+                          color: "#ffffff",
+                          fontSize: "0.875rem",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {request.employeeName}
+                      </td>
+                    )}
+                    <td
+                      style={{
+                        padding: "1rem",
+                        color: "#ffffff",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {request.type}
+                    </td>
+                    <td
+                      style={{
+                        padding: "1rem",
+                        color: "#ffffff",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {request.startDate} - {request.endDate}
+                    </td>
+                    <td
+                      style={{
+                        padding: "1rem",
+                        color: "#ffffff",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {request.numberOfDays}
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "0.375rem 0.75rem",
+                          borderRadius: "0.375rem",
+                          fontSize: "0.75rem",
+                          fontWeight: "600",
+                          background: `${getStatusColor(request.status)}20`,
+                          color: getStatusColor(request.status),
+                        }}
+                      >
+                        {request.status}
+                      </span>
+                    </td>
+                    {auth?.roles?.includes("admin") && (
+                      <td style={{ padding: "1rem" }}>
+                        {request.status === "Pending" && (
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <button
+                              onClick={() => handleApprove(request.id)}
+                              style={{
+                                background: "#10b981",
+                                color: "#ffffff",
+                                padding: "0.5rem 1rem",
+                                borderRadius: "0.375rem",
+                                border: "none",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                transition: "background 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = "#059669";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = "#10b981";
+                              }}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleReject(request.id)}
+                              style={{
+                                background: "#ef4444",
+                                color: "#ffffff",
+                                padding: "0.5rem 1rem",
+                                borderRadius: "0.375rem",
+                                border: "none",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                transition: "background 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = "#dc2626";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = "#ef4444";
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
@@ -440,8 +718,8 @@ const Requests = () => {
                   <option value="" disabled>
                     Select type
                   </option>
-                  <option value="WFH">Work From Home</option>
-                  <option value="Mission">Mission</option>
+                  <option value="WFH">العمل من المنزل</option>
+                  <option value="VACATION">إجازة</option>
                 </select>
               </div>
 
@@ -568,39 +846,6 @@ const Requests = () => {
                 </div>
               </div>
 
-              {/* Notes */}
-              <div style={{ marginBottom: "2rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "#ffffff",
-                    fontSize: "0.875rem",
-                    fontWeight: "600",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Notes
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleFormChange}
-                  placeholder="Add any additional information..."
-                  rows="4"
-                  style={{
-                    width: "100%",
-                    background: "#3a3a3a",
-                    color: "#ffffff",
-                    border: "1px solid #4a4a4a",
-                    borderRadius: "0.5rem",
-                    padding: "0.875rem 1rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                    resize: "vertical",
-                  }}
-                />
-              </div>
-
               {/* Buttons */}
               <div
                 style={{
@@ -634,8 +879,308 @@ const Requests = () => {
                 </button>
                 <button
                   type="submit"
+                  disabled={loading}
                   style={{
-                    background: "#f97316",
+                    background: loading ? "#9ca3af" : "#f97316",
+                    color: "#ffffff",
+                    padding: "0.875rem 1.5rem",
+                    borderRadius: "0.5rem",
+                    border: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    transition: "background 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) e.target.style.background = "#ea580c";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) e.target.style.background = "#f97316";
+                  }}
+                >
+                  {loading ? "Submitting..." : "Submit Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Request Modal for Admin */}
+      {showCustomModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.75)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={handleCloseCustomModal}
+        >
+          <div
+            style={{
+              background: "#2d2d2d",
+              borderRadius: "0.75rem",
+              maxWidth: "500px",
+              width: "90%",
+              maxHeight: "90vh",
+              overflow: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "1.5rem",
+                borderBottom: "1px solid #404040",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  color: "#ffffff",
+                  margin: 0,
+                }}
+              >
+                Create Custom Request
+              </h2>
+              <button
+                onClick={handleCloseCustomModal}
+                style={{
+                  background: "#3a3a3a",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  width: "2.5rem",
+                  height: "2.5rem",
+                  fontSize: "1.25rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#4a4a4a";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#3a3a3a";
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form
+              onSubmit={handleSubmitCustomRequest}
+              style={{ padding: "1.5rem" }}
+            >
+              {/* Employee Selection */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Employee *
+                </label>
+                <select
+                  name="employeeId"
+                  value={customFormData.employeeId}
+                  onChange={handleCustomFormChange}
+                  required
+                  style={{
+                    width: "100%",
+                    background: "#3a3a3a",
+                    color: "#ffffff",
+                    border: "1px solid #4a4a4a",
+                    borderRadius: "0.5rem",
+                    padding: "0.875rem 1rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select employee
+                  </option>
+                  {employees.map((emp) => (
+                    <option key={emp._id} value={emp._id}>
+                      {emp.fullName} ({emp.employeeCode})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Request Type */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Request Type *
+                </label>
+                <select
+                  name="requestType"
+                  value={customFormData.requestType}
+                  onChange={handleCustomFormChange}
+                  required
+                  style={{
+                    width: "100%",
+                    background: "#3a3a3a",
+                    color: "#ffffff",
+                    border: "1px solid #4a4a4a",
+                    borderRadius: "0.5rem",
+                    padding: "0.875rem 1rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select type
+                  </option>
+                  <option value="WFH">العمل من المنزل</option>
+                  <option value="VACATION">إجازة</option>
+                </select>
+              </div>
+
+              {/* Date Fields */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "1rem",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      color: "#ffffff",
+                      fontSize: "0.875rem",
+                      fontWeight: "600",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    Start Date
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={customFormData.startDate}
+                      onChange={handleCustomFormChange}
+                      required
+                      style={{
+                        width: "100%",
+                        background: "#3a3a3a",
+                        color: "#ffffff",
+                        border: "1px solid #4a4a4a",
+                        borderRadius: "0.5rem",
+                        padding: "0.875rem 2.5rem 0.875rem 1rem",
+                        fontSize: "0.875rem",
+                        outline: "none",
+                        cursor: "pointer",
+                        colorScheme: "dark",
+                      }}
+                    />
+                    <i
+                      className="fas fa-calendar-alt"
+                      style={{
+                        position: "absolute",
+                        right: "1rem",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "#9ca3af",
+                        pointerEvents: "none",
+                      }}
+                    ></i>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      color: "#ffffff",
+                      fontSize: "0.875rem",
+                      fontWeight: "600",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    End Date
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={customFormData.endDate}
+                      onChange={handleCustomFormChange}
+                      required
+                      style={{
+                        width: "100%",
+                        background: "#3a3a3a",
+                        color: "#ffffff",
+                        border: "1px solid #4a4a4a",
+                        borderRadius: "0.5rem",
+                        padding: "0.875rem 2.5rem 0.875rem 1rem",
+                        fontSize: "0.875rem",
+                        outline: "none",
+                        cursor: "pointer",
+                        colorScheme: "dark",
+                      }}
+                    />
+                    <i
+                      className="fas fa-calendar-alt"
+                      style={{
+                        position: "absolute",
+                        right: "1rem",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "#9ca3af",
+                        pointerEvents: "none",
+                      }}
+                    ></i>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "1rem",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={handleCloseCustomModal}
+                  style={{
+                    background: "#3a3a3a",
                     color: "#ffffff",
                     padding: "0.875rem 1.5rem",
                     borderRadius: "0.5rem",
@@ -646,13 +1191,36 @@ const Requests = () => {
                     transition: "background 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = "#ea580c";
+                    e.target.style.background = "#4a4a4a";
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.background = "#f97316";
+                    e.target.style.background = "#3a3a3a";
                   }}
                 >
-                  Submit Request
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    background: loading ? "#9ca3af" : "#f97316",
+                    color: "#ffffff",
+                    padding: "0.875rem 1.5rem",
+                    borderRadius: "0.5rem",
+                    border: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    transition: "background 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) e.target.style.background = "#ea580c";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) e.target.style.background = "#f97316";
+                  }}
+                >
+                  {loading ? "Submitting..." : "Submit Request"}
                 </button>
               </div>
             </form>

@@ -7,11 +7,11 @@ const asyncHandler = require("express-async-handler");
 // @route POST /auth
 // @access public
 const login = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
+  const { email, password } = req.body;
+  if (!email || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
-  const foundUser = await User.findOne({ username }).exec();
+  const foundUser = await User.findOne({ email }).exec();
   if (!foundUser || !foundUser.active) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -30,7 +30,7 @@ const login = asyncHandler(async (req, res) => {
   const accessToken = jwt.sign(
     {
       UserInfo: {
-        username: foundUser.username,
+        email: foundUser.email,
         roles: foundUser.roles,
       },
     },
@@ -39,7 +39,7 @@ const login = asyncHandler(async (req, res) => {
   );
 
   const refreshToken = jwt.sign(
-    { username: foundUser.username },
+    { email: foundUser.email },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "30m" }
   );
@@ -49,7 +49,7 @@ const login = asyncHandler(async (req, res) => {
     sameSite: "None",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
-  res.json({ accessToken, roles, username });
+  res.json({ accessToken, roles, email: foundUser.email });
 
   //do stuff
 });
@@ -76,7 +76,7 @@ const refresh = asyncHandler(async (req, res) => {
       }
 
       const foundUser = await User.findOne({
-        username: decoded.username,
+        email: decoded.email,
       }).exec();
       if (!foundUser) {
         return res
@@ -92,7 +92,7 @@ const refresh = asyncHandler(async (req, res) => {
       const accessToken = jwt.sign(
         {
           UserInfo: {
-            username: foundUser.username,
+            email: foundUser.email,
             roles: roles,
           },
         },
@@ -103,7 +103,7 @@ const refresh = asyncHandler(async (req, res) => {
       res.json({
         roles,
         accessToken,
-        username: foundUser.username,
+        email: foundUser.email,
       });
     }
   );
