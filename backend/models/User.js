@@ -68,6 +68,11 @@ const userSchema = new mongoose.Schema({
     },
     trim: true,
   },
+  fullNameArabic: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   employeeCode: {
     type: String,
     unique: true,
@@ -82,6 +87,18 @@ const userSchema = new mongoose.Schema({
   },
   jobPosition: {
     type: String,
+    trim: true,
+  },
+  title: {
+    type: String,
+    enum: [
+      "Frontend Lead",
+      "Backend Lead",
+      "Frontend Dev",
+      "Backend Dev",
+      "UIUX",
+      "RA",
+    ],
     trim: true,
   },
   branch: {

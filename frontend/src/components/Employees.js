@@ -11,28 +11,24 @@ const AddEmployee = () => {
   const [employees, setEmployees] = useState([]);
   const [employeesLoading, setEmployeesLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
-  const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
+    fullNameArabic: "",
     email: "",
     phoneNumber: "",
-    password: "",
     employeeCode: "",
     fingerprint: "",
-    jobPosition: "",
     branch: "المركز الرئيسي",
+    title: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const jobPositions = ["مهندس برمجيات"];
-
-  const branches = ["المركز الرئيسي"];
+  const branches = ["Main Branch"];
 
   // Fetch employees list
   useEffect(() => {
@@ -66,6 +62,10 @@ const AddEmployee = () => {
       setError("Full Name is required");
       return false;
     }
+    if (!formData.fullNameArabic.trim()) {
+      setError("Full Name (Arabic) is required");
+      return false;
+    }
     if (!formData.email.trim()) {
       setError("Email is required");
       return false;
@@ -78,26 +78,12 @@ const AddEmployee = () => {
       setError("Phone Number is required");
       return false;
     }
-    // Password is only required for new employees
-    if (!editingEmployeeId && !formData.password) {
-      setError("Password is required");
-      return false;
-    }
-    // If password is provided, validate length
-    if (formData.password && formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return false;
-    }
     if (!formData.employeeCode.trim()) {
       setError("Employee Code is required");
       return false;
     }
     if (!formData.fingerprint.trim()) {
       setError("Fingerprint Code is required");
-      return false;
-    }
-    if (!formData.jobPosition) {
-      setError("Job Position is required");
       return false;
     }
     return true;
@@ -118,18 +104,14 @@ const AddEmployee = () => {
       // Transform frontend data to match backend API contract
       const employeeData = {
         fullName: formData.fullName,
+        fullNameArabic: formData.fullNameArabic,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         employeeCode: formData.employeeCode,
         fingerprintCode: formData.fingerprint, // Map fingerprint to fingerprintCode
-        jobPosition: formData.jobPosition,
         branch: formData.branch,
+        title: formData.title,
       };
-
-      // Only include password if it's provided (for create or update with new password)
-      if (formData.password) {
-        employeeData.password = formData.password;
-      }
 
       let response;
       if (editingEmployeeId) {
@@ -141,11 +123,6 @@ const AddEmployee = () => {
         setSuccess(response.data.message || "Employee updated successfully!");
       } else {
         // Create new employee
-        if (!formData.password) {
-          setError("Password is required for new employees");
-          setLoading(false);
-          return;
-        }
         response = await axiosPrivate.post("/users/employee", employeeData);
         setSuccess(response.data.message || "Employee added successfully!");
       }
@@ -157,13 +134,13 @@ const AddEmployee = () => {
       setTimeout(() => {
         setFormData({
           fullName: "",
+          fullNameArabic: "",
           email: "",
           phoneNumber: "",
-          password: "",
           employeeCode: "",
           fingerprint: "",
-          jobPosition: "",
           branch: "المركز الرئيسي",
+          title: "",
         });
         setSuccess("");
         setShowModal(false);
@@ -184,13 +161,14 @@ const AddEmployee = () => {
     setEditingEmployeeId(employee._id);
     setFormData({
       fullName: employee.fullName || employee.username || "",
+      fullNameArabic: employee.fullNameArabic || "",
       email: employee.email || "",
       phoneNumber: employee.phonenumber || employee.phoneNumber || "",
       password: "", // Don't populate password
       employeeCode: employee.employeeCode || "",
       fingerprint: employee.fingerprintCode || "",
-      jobPosition: employee.jobPosition || "",
       branch: employee.branch || "Maadi",
+      title: employee.title || "",
     });
     setShowModal(true);
   };
@@ -215,81 +193,16 @@ const AddEmployee = () => {
     setEditingEmployeeId(null);
     setFormData({
       fullName: "",
+      fullNameArabic: "",
       email: "",
       phoneNumber: "",
-      password: "",
       employeeCode: "",
       fingerprint: "",
-      jobPosition: "",
       branch: "المركز الرئيسي",
+      title: "",
     });
     setError("");
     setSuccess("");
-  };
-
-  const handleExportCredentials = () => {
-    if (selectedEmployees.length === 0) {
-      alert("Please select at least one employee to export");
-      return;
-    }
-
-    // Filter employees to only selected ones
-    const employeesToExport = employees.filter((emp) =>
-      selectedEmployees.includes(emp._id)
-    );
-
-    // Generate credentials text content
-    let credentialsText = "================================\n";
-    credentialsText += "   EMPLOYEE LOGIN CREDENTIALS\n";
-    credentialsText += "================================\n\n";
-
-    employeesToExport.forEach((employee, index) => {
-      credentialsText += `${index + 1}. ${
-        employee.fullName || employee.username || "N/A"
-      }\n`;
-      credentialsText += `   Email: ${employee.email || "N/A"}\n`;
-      credentialsText += `   Password: ${
-        employee.decryptedPassword || "Not Set"
-      }\n`;
-      credentialsText += `\n-----------------------------------\n\n`;
-    });
-
-    // Create blob and download
-    const blob = new Blob([credentialsText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Employee_Credentials_${
-      new Date().toISOString().split("T")[0]
-    }.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    // Close modal and reset selections
-    setShowExportModal(false);
-    setSelectedEmployees([]);
-  };
-
-  const handleSelectAll = () => {
-    if (selectedEmployees.length === employees.length) {
-      // Deselect all
-      setSelectedEmployees([]);
-    } else {
-      // Select all
-      setSelectedEmployees(employees.map((emp) => emp._id));
-    }
-  };
-
-  const handleToggleEmployee = (employeeId) => {
-    setSelectedEmployees((prev) => {
-      if (prev.includes(employeeId)) {
-        return prev.filter((id) => id !== employeeId);
-      } else {
-        return [...prev, employeeId];
-      }
-    });
   };
 
   return (
@@ -340,38 +253,6 @@ const AddEmployee = () => {
             </p>
           </div>
           <div style={{ display: "flex", gap: "1rem" }}>
-            <button
-              onClick={() => {
-                if (employees.length === 0) {
-                  alert("No employees available");
-                  return;
-                }
-                setShowExportModal(true);
-              }}
-              style={{
-                background: "#10b981",
-                color: "#ffffff",
-                padding: "0.75rem 1.5rem",
-                borderRadius: "0.5rem",
-                border: "none",
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = "#059669";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = "#10b981";
-              }}
-            >
-              <i className="fas fa-download"></i>
-              Export Credentials
-            </button>
             <button
               onClick={() => setShowModal(true)}
               style={{
@@ -802,6 +683,81 @@ const AddEmployee = () => {
                 />
               </div>
 
+              {/* Full Name Arabic */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label
+                  htmlFor="fullNameArabic"
+                  style={{
+                    display: "block",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Full Name (Arabic) *
+                </label>
+                <input
+                  type="text"
+                  id="fullNameArabic"
+                  name="fullNameArabic"
+                  value={formData.fullNameArabic}
+                  onChange={handleChange}
+                  placeholder="أدخل الاسم بالعربية"
+                  style={{
+                    width: "100%",
+                    background: "#3a3a3a",
+                    color: "#ffffff",
+                    border: "1px solid #4a4a4a",
+                    borderRadius: "0.5rem",
+                    padding: "0.75rem 1rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              {/* Title */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label
+                  htmlFor="title"
+                  style={{
+                    display: "block",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Title
+                </label>
+                <select
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  style={{
+                    width: "100%",
+                    background: "#3a3a3a",
+                    color: "#ffffff",
+                    border: "1px solid #4a4a4a",
+                    borderRadius: "0.5rem",
+                    padding: "0.75rem 1rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="">Select Title</option>
+                  <option value="Frontend Lead">Frontend Lead</option>
+                  <option value="Backend Lead">Backend Lead</option>
+                  <option value="Frontend Dev">Frontend Dev</option>
+                  <option value="Backend Dev">Backend Dev</option>
+                  <option value="UIUX">UIUX</option>
+                  <option value="RA">RA</option>
+                </select>
+              </div>
+
               {/* Email */}
               <div style={{ marginBottom: "1.5rem" }}>
                 <label
@@ -857,45 +813,6 @@ const AddEmployee = () => {
                   value={formData.phoneNumber}
                   onChange={handleChange}
                   placeholder="Enter phone number"
-                  style={{
-                    width: "100%",
-                    background: "#3a3a3a",
-                    color: "#ffffff",
-                    border: "1px solid #4a4a4a",
-                    borderRadius: "0.5rem",
-                    padding: "0.75rem 1rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
-              </div>
-
-              {/* Password */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  htmlFor="password"
-                  style={{
-                    display: "block",
-                    color: "#ffffff",
-                    fontSize: "0.875rem",
-                    fontWeight: "500",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Password{" "}
-                  {editingEmployeeId ? "(Leave blank to keep current)" : "*"}
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder={
-                    editingEmployeeId
-                      ? "Enter new password (optional)"
-                      : "Enter password (min. 6 characters)"
-                  }
                   style={{
                     width: "100%",
                     background: "#3a3a3a",
@@ -975,46 +892,6 @@ const AddEmployee = () => {
                     outline: "none",
                   }}
                 />
-              </div>
-
-              {/* Job Position */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  htmlFor="jobPosition"
-                  style={{
-                    display: "block",
-                    color: "#ffffff",
-                    fontSize: "0.875rem",
-                    fontWeight: "500",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Job Position *
-                </label>
-                <select
-                  id="jobPosition"
-                  name="jobPosition"
-                  value={formData.jobPosition}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    background: "#3a3a3a",
-                    color: "#ffffff",
-                    border: "1px solid #4a4a4a",
-                    borderRadius: "0.5rem",
-                    padding: "0.75rem 1rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <option value="">Select job position</option>
-                  {jobPositions.map((position) => (
-                    <option key={position} value={position}>
-                      {position}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Branch */}
@@ -1120,267 +997,6 @@ const AddEmployee = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Export Credentials Modal */}
-      {showExportModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "2rem",
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowExportModal(false);
-              setSelectedEmployees([]);
-            }
-          }}
-        >
-          <div
-            style={{
-              background: "#2d2d2d",
-              borderRadius: "0.75rem",
-              padding: "2rem",
-              maxWidth: "600px",
-              width: "100%",
-              maxHeight: "80vh",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1.5rem",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "#ffffff",
-                }}
-              >
-                Select Employees to Export
-              </h2>
-              <button
-                onClick={() => {
-                  setShowExportModal(false);
-                  setSelectedEmployees([]);
-                }}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#9ca3af",
-                  fontSize: "1.5rem",
-                  cursor: "pointer",
-                  padding: "0",
-                  width: "30px",
-                  height: "30px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = "#ffffff";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = "#9ca3af";
-                }}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            {/* Select All Button */}
-            <div
-              style={{
-                marginBottom: "1rem",
-                paddingBottom: "1rem",
-                borderBottom: "1px solid #404040",
-              }}
-            >
-              <button
-                onClick={handleSelectAll}
-                style={{
-                  background: "#3b82f6",
-                  color: "#ffffff",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.375rem",
-                  border: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#2563eb";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#3b82f6";
-                }}
-              >
-                {selectedEmployees.length === employees.length
-                  ? "Deselect All"
-                  : "Select All"}
-              </button>
-              <span
-                style={{
-                  marginLeft: "1rem",
-                  color: "#9ca3af",
-                  fontSize: "0.875rem",
-                }}
-              >
-                {selectedEmployees.length} of {employees.length} selected
-              </span>
-            </div>
-
-            {/* Employee List */}
-            <div
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                marginBottom: "1.5rem",
-              }}
-            >
-              {employees.map((employee) => (
-                <div
-                  key={employee._id}
-                  style={{
-                    padding: "0.75rem",
-                    marginBottom: "0.5rem",
-                    background: "#3a3a3a",
-                    borderRadius: "0.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    cursor: "pointer",
-                    transition: "background 0.2s",
-                  }}
-                  onClick={() => handleToggleEmployee(employee._id)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#4a4a4a";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#3a3a3a";
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedEmployees.includes(employee._id)}
-                    onChange={() => handleToggleEmployee(employee._id)}
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "1rem",
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        color: "#ffffff",
-                        fontSize: "0.875rem",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {employee.fullName || employee.username || "N/A"}
-                    </div>
-                    <div
-                      style={{
-                        color: "#9ca3af",
-                        fontSize: "0.75rem",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {employee.email || "N/A"} •{" "}
-                      {employee.employeeCode || "N/A"}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                onClick={() => {
-                  setShowExportModal(false);
-                  setSelectedEmployees([]);
-                }}
-                style={{
-                  background: "#3a3a3a",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  border: "1px solid #4a4a4a",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#4a4a4a";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#3a3a3a";
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleExportCredentials}
-                disabled={selectedEmployees.length === 0}
-                style={{
-                  background:
-                    selectedEmployees.length === 0 ? "#9ca3af" : "#10b981",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  border: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  cursor:
-                    selectedEmployees.length === 0 ? "not-allowed" : "pointer",
-                  transition: "background 0.2s",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedEmployees.length > 0) {
-                    e.target.style.background = "#059669";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedEmployees.length > 0) {
-                    e.target.style.background = "#10b981";
-                  }
-                }}
-              >
-                <i className="fas fa-download"></i>
-                Export Selected ({selectedEmployees.length})
-              </button>
-            </div>
           </div>
         </div>
       )}

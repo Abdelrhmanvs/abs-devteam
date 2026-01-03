@@ -19,7 +19,7 @@ const requestSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["WFH", "VACATION"],
+      enum: ["WFH", "VACATION", "LATE_PERMISSION", "EARLY_LEAVE"],
     },
     startDate: {
       type: Date,

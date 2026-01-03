@@ -16,6 +16,7 @@ router.route("/week").get(requestsController.getWeekSchedule);
 router.route("/approved").get(requestsController.getApprovedRequests);
 router.route("/weekly-wfh").get(requestsController.getWeeklyWFH);
 router.route("/random-wfh").post(requestsController.generateRandomWFH);
+router.route("/admin").post(requestsController.createAdminRequest);
 router.route("/all").delete(requestsController.deleteAllRequests);
 router
   .route("/:id")

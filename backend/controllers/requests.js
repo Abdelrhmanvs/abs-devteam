@@ -7,6 +7,8 @@ const getHRCategory = (requestType) => {
   const categoryMap = {
     WFH: "العمل من المنزل",
     VACATION: "إجازة",
+    LATE_PERMISSION: "اذن تاخير",
+    EARLY_LEAVE: "انصراف مبكر",
   };
   return categoryMap[requestType] || "غير محدد";
 };
@@ -38,10 +40,12 @@ const createRequest = asyncHandler(async (req, res) => {
     });
   }
 
-  // Validate request type (only WFH or VACATION allowed)
-  if (type !== "WFH" && type !== "VACATION") {
+  // Validate request type
+  const validTypes = ["WFH", "VACATION", "LATE_PERMISSION", "EARLY_LEAVE"];
+  if (!validTypes.includes(type)) {
     return res.status(400).json({
-      message: "Invalid request type. Only WFH or VACATION are allowed.",
+      message:
+        "Invalid request type. Only WFH, VACATION, LATE_PERMISSION, or EARLY_LEAVE are allowed.",
     });
   }
 
@@ -278,7 +282,7 @@ const getApprovedRequests = asyncHandler(async (req, res) => {
   const approvedRequests = await Request.find({ status: "Approved" })
     .populate(
       "employeeId",
-      "fullName employeeCode fingerprintCode jobPosition branch"
+      "fullName fullNameArabic employeeCode fingerprintCode jobPosition branch"
     )
     .sort({ startDate: -1 })
     .lean();
@@ -298,10 +302,14 @@ const getApprovedRequests = asyncHandler(async (req, res) => {
     id: request._id,
     code: request.employeeCode || "",
     fingerprint: request.employeeId?.fingerprintCode || "",
-    employeeName: request.employeeId?.fullName || request.employeeName || "",
-    jobPosition: request.employeeId?.jobPosition || "",
+    employeeName:
+      request.employeeId?.fullNameArabic ||
+      request.employeeId?.fullName ||
+      request.employeeName ||
+      "",
+    jobPosition: "مهندس برمجيات",
     branch: request.employeeId?.branch || "",
-    timeOffType: "ماموريه", // Always show as "ماموريه" (Mission)
+    timeOffType: request.type === "WFH" ? "ماموريه" : "", // Only show "ماموريه" (Mission) for WFH
     requestType: request.type, // Include raw type for filtering
     purpose: getHRCategory(request.type), // Show العمل من المنزل or إجازة based on type
     startDate: formatLocalDate(request.startDate),
@@ -396,10 +404,21 @@ const getWeeklyWFH = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "User not found in token" });
   }
 
-  if (!roles?.includes("admin")) {
+  // Get the current user to check their title
+  const currentUser = await User.findOne({ email }).exec();
+  if (!currentUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Check authorization: Admin, Frontend Lead, or Backend Lead
+  const isAdmin = roles?.includes("admin");
+  const isFrontendLead = currentUser.title === "Frontend Lead";
+  const isBackendLead = currentUser.title === "Backend Lead";
+
+  if (!isAdmin && !isFrontendLead && !isBackendLead) {
     return res
       .status(403)
-      .json({ message: "Unauthorized - Admin access only" });
+      .json({ message: "Unauthorized - Admin or Lead access only" });
   }
 
   // Calculate current week (Sunday to Saturday) in local timezone
@@ -430,9 +449,24 @@ const getWeeklyWFH = asyncHandler(async (req, res) => {
     startDate: { $lte: saturday },
     endDate: { $gte: sunday },
   })
-    .populate("employeeId", "fullName employeeCode")
+    .populate("employeeId", "fullName employeeCode title")
     .sort({ employeeName: 1 })
     .lean();
+
+  // Filter requests based on user's title
+  let filteredRequests = approvedRequests;
+  if (isFrontendLead) {
+    // Frontend Lead sees only Frontend Dev employees
+    filteredRequests = approvedRequests.filter(
+      (req) => req.employeeId?.title === "Frontend Dev"
+    );
+  } else if (isBackendLead) {
+    // Backend Lead sees only Backend Dev employees
+    filteredRequests = approvedRequests.filter(
+      (req) => req.employeeId?.title === "Backend Dev"
+    );
+  }
+  // Admin sees all (no filtering needed)
 
   // Generate array of days for current week using local dates
   const weekDays = [];
@@ -463,7 +497,7 @@ const getWeeklyWFH = asyncHandler(async (req, res) => {
   // Build employee WFH schedule
   const employeeSchedule = new Map();
 
-  approvedRequests.forEach((request) => {
+  filteredRequests.forEach((request) => {
     const employeeName =
       request.employeeId?.fullName || request.employeeName || "Unknown";
     const employeeCode =
@@ -637,8 +671,8 @@ const generateRandomWFH = asyncHandler(async (req, res) => {
         continue;
       }
 
-      // Randomly select days for this employee
-      const availableDayIndices = [0, 1, 2, 3, 4, 5, 6]; // Sunday to Saturday
+      // Randomly select days for this employee (excluding Friday)
+      const availableDayIndices = [0, 1, 2, 3, 4, 6]; // Sunday to Saturday, excluding Friday (5)
       const selectedDayIndices = [];
 
       // Randomly pick numberOfDaysPerEmployee unique days
@@ -702,6 +736,73 @@ const generateRandomWFH = asyncHandler(async (req, res) => {
   });
 });
 
+//@desc Create custom request as admin
+//@route POST /requests/admin
+//@access Private (Admin)
+const createAdminRequest = asyncHandler(async (req, res) => {
+  const { employeeId, type, startDate, endDate, numberOfDays } = req.body;
+
+  // Validate required fields
+  if (!employeeId || !type || !startDate || !endDate || !numberOfDays) {
+    return res.status(400).json({
+      message:
+        "Required fields: employeeId, type, startDate, endDate, numberOfDays",
+    });
+  }
+
+  // Find the target employee
+  const targetEmployee = await User.findById(employeeId).exec();
+  if (!targetEmployee) {
+    return res.status(404).json({ message: "Employee not found" });
+  }
+
+  // Create request object with approved status
+  const requestData = {
+    employeeId: targetEmployee._id,
+    employeeName:
+      targetEmployee.fullNameArabic ||
+      targetEmployee.fullName ||
+      targetEmployee.username,
+    employeeCode: targetEmployee.employeeCode,
+    type,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
+    selectedDates: [],
+    numberOfDays,
+    reason: "Admin created custom request",
+    notes: "",
+    status: "Approved", // Admin requests are auto-approved
+    source: "ADMIN_DIRECT",
+  };
+
+  // Create and save request
+  const request = await Request.create(requestData);
+
+  if (request) {
+    await request.populate(
+      "employeeId",
+      "fullName fullNameArabic email employeeCode"
+    );
+
+    res.status(201).json({
+      message: "Admin request created successfully",
+      request: {
+        id: request._id,
+        employeeName: request.employeeName,
+        type: request.type,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        numberOfDays: request.numberOfDays,
+        status: request.status,
+        source: request.source,
+        createdAt: request.createdAt,
+      },
+    });
+  } else {
+    res.status(400).json({ message: "Failed to create request" });
+  }
+});
+
 module.exports = {
   createRequest,
   getAllRequests,
@@ -713,4 +814,5 @@ module.exports = {
   deleteAllRequests,
   getWeeklyWFH,
   generateRandomWFH,
+  createAdminRequest,
 };

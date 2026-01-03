@@ -157,42 +157,65 @@ const HRForm = () => {
   const handleExportToExcel = () => {
     const filteredData = getFilteredData();
 
-    // Create Excel-compatible data structure with exact column names
-    const excelData = filteredData.map((row) => ({
-      code: row.code || "",
-      "Employee / Fingerprint": row.fingerprint || "",
-      Employee: row.employeeName || "",
-      "Employee / Job Position": row.jobPosition || "",
-      "Employee / الفرع": row.branch || "",
-      "Time Off Type": row.timeOffType || "",
-      "الغرض من النموذج الإداري": row.purpose || "",
+    // Create Excel-compatible data structure with bilingual headers
+    const excelData = filteredData.map((row, index) => ({
+      "#": index + 1,
+      "Employee Code": row.code || "",
+      "Fingerprint ID": row.fingerprint || "",
+      "Employee Name": row.employeeName || "",
+      "Job Position": row.jobPosition || "",
+      "Branch / الفرع": row.branch || "",
+      "Request Type": row.timeOffType || "",
+      "Purpose / الغرض": row.purpose || "",
       "Start Date": row.startDate || "",
       "End Date": row.endDate || "",
-      "عدد الأيام": row.numberOfDays || "",
+      "Days / الأيام": row.numberOfDays || "",
+      Status: row.status || "Approved",
     }));
 
     // Create a new workbook and worksheet
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "HR Export");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "HR Report");
 
-    // Auto-size columns for better readability
+    // Enhanced column widths for better readability
     const columnWidths = [
-      { wch: 10 }, // code
-      { wch: 20 }, // Employee / Fingerprint
-      { wch: 25 }, // Employee
-      { wch: 25 }, // Employee / Job Position
-      { wch: 20 }, // Employee / الفرع
-      { wch: 15 }, // Time Off Type
-      { wch: 30 }, // الغرض من النموذج الإداري
+      { wch: 5 }, // #
+      { wch: 15 }, // Employee Code
+      { wch: 15 }, // Fingerprint ID
+      { wch: 30 }, // Employee Name
+      { wch: 25 }, // Job Position
+      { wch: 20 }, // Branch
+      { wch: 18 }, // Request Type
+      { wch: 35 }, // Purpose
       { wch: 12 }, // Start Date
       { wch: 12 }, // End Date
-      { wch: 12 }, // عدد الأيام
+      { wch: 10 }, // Days
+      { wch: 12 }, // Status
     ];
     worksheet["!cols"] = columnWidths;
 
-    // Generate Excel file and trigger download
-    const fileName = `HR_Export_${new Date().toISOString().split("T")[0]}.xlsx`;
+    // Add header row styling (bold, background color)
+    const range = XLSX.utils.decode_range(worksheet["!ref"]);
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!worksheet[cellAddress]) continue;
+      worksheet[cellAddress].s = {
+        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "4472C4" } },
+        alignment: { horizontal: "center", vertical: "center" },
+      };
+    }
+
+    // Add filters to header row
+    worksheet["!autofilter"] = { ref: worksheet["!ref"] };
+
+    // Freeze header row
+    worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+
+    // Generate Excel file with company name and date
+    const dateStr = new Date().toISOString().split("T")[0];
+    const fileName = `HR_Report_${dateStr}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
 

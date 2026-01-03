@@ -2,7 +2,8 @@ const User = require("../models/User");
 const asyncHandler = require("express-async-handler"); // keep us from using try and catch alot
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { encryptPassword, decryptPassword } = require("../utils/encryption");
+const { sendCredentialsEmail } = require("../config/mailer");
+const { generateRandomPassword } = require("../utils/generatePassword");
 //@desc get all users
 //@route get/users
 //@access Private
@@ -110,6 +111,7 @@ const updateuser = asyncHandler(async (req, res) => {
   const {
     username,
     fullName,
+    fullNameArabic,
     email,
     phoneNumber,
     password,
@@ -136,6 +138,7 @@ const updateuser = asyncHandler(async (req, res) => {
 
   // Update employee fields if provided
   if (fullName) user.fullName = fullName;
+  if (fullNameArabic !== undefined) user.fullNameArabic = fullNameArabic;
   if (email) user.email = email;
   if (phoneNumber) user.phonenumber = phoneNumber;
   if (employeeCode) user.employeeCode = employeeCode;
@@ -153,7 +156,6 @@ const updateuser = asyncHandler(async (req, res) => {
   // Update password if provided
   if (password && password.trim() !== "") {
     user.password = await bcrypt.hash(password, 10);
-    user.encryptedPassword = encryptPassword(password);
   }
 
   const updatedUser = await user.save();
@@ -322,9 +324,9 @@ const deleteUser = asyncHandler(async (req, res) => {
 const createEmployee = asyncHandler(async (req, res) => {
   const {
     fullName,
+    fullNameArabic,
     email,
     phoneNumber,
-    password,
     employeeCode,
     fingerprintCode,
     jobPosition,
@@ -334,23 +336,21 @@ const createEmployee = asyncHandler(async (req, res) => {
   // Validate required fields
   if (
     !fullName ||
+    !fullNameArabic ||
     !email ||
     !phoneNumber ||
-    !password ||
     !employeeCode ||
-    !fingerprintCode ||
-    !jobPosition
+    !fingerprintCode
   ) {
     return res.status(400).json({
       message: "All fields are required",
       required: [
         "fullName",
+        "fullNameArabic",
         "email",
         "phoneNumber",
-        "password",
         "employeeCode",
         "fingerprintCode",
-        "jobPosition",
       ],
     });
   }
@@ -361,12 +361,8 @@ const createEmployee = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Invalid email format" });
   }
 
-  // Validate password length
-  if (password.length < 6) {
-    return res
-      .status(400)
-      .json({ message: "Password must be at least 6 characters" });
-  }
+  // Generate random password
+  const password = generateRandomPassword(12);
 
   // Check for duplicate email
   const duplicateEmail = await User.findOne({ email })
@@ -400,20 +396,19 @@ const createEmployee = asyncHandler(async (req, res) => {
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
-  const encrypted = encryptPassword(password);
 
   // Create employee object
   const employeeObject = {
     username: fullName, // Using fullName as username for backward compatibility
     fullName,
+    fullNameArabic: fullNameArabic || "",
     email,
     phonenumber: phoneNumber,
     password: hashedPassword,
-    encryptedPassword: encrypted,
     employeeCode,
     fingerprintCode,
-    jobPosition,
-    branch: branch || "المركز الرئيسي",
+    jobPosition: "Software Engineer",
+    branch: branch || "Main Branch",
     roles: ["user"], // Default role
     active: true,
   };
@@ -422,8 +417,22 @@ const createEmployee = asyncHandler(async (req, res) => {
   const employee = await User.create(employeeObject);
 
   if (employee) {
+    // Send credentials email to the new employee
+    const emailResult = await sendCredentialsEmail(email, password, {
+      fullName,
+      employeeCode,
+      jobPosition,
+      branch: branch || "المركز الرئيسي",
+    });
+
+    // Log email status but don't fail the request if email fails
+    if (!emailResult.success) {
+      console.error("Failed to send credentials email:", emailResult.error);
+    }
+
     res.status(201).json({
       message: "Employee created successfully",
+      emailSent: emailResult.success,
       employee: {
         id: employee._id,
         fullName: employee.fullName,
@@ -448,19 +457,11 @@ const getAllEmployees = asyncHandler(async (req, res) => {
     employeeCode: { $exists: true, $ne: null },
   })
     .select(
-      "fullName email phonenumber employeeCode fingerprintCode jobPosition branch encryptedPassword"
+      "fullName fullNameArabic email phonenumber employeeCode fingerprintCode jobPosition branch"
     )
     .lean();
 
-  // Decrypt passwords for employees
-  const employeesWithDecrypted = employees.map((emp) => ({
-    ...emp,
-    decryptedPassword: emp.encryptedPassword
-      ? decryptPassword(emp.encryptedPassword)
-      : "Not Set",
-  }));
-
-  res.json(employeesWithDecrypted);
+  res.json(employees);
 });
 
 module.exports = {

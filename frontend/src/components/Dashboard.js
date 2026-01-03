@@ -458,7 +458,7 @@ const Dashboard = () => {
                       className="fas fa-home"
                       style={{ marginRight: "0.25rem" }}
                     ></i>
-                    {daySchedule.type === "WFH" ? "العمل من المنزل" : "إجازة"}
+                    {daySchedule.type === "WFH" ? "Work From Home" : "Leave"}
                   </div>
                 ) : (
                   <div
@@ -707,6 +707,8 @@ const Dashboard = () => {
                   </option>
                   <option value="WFH">العمل من المنزل</option>
                   <option value="VACATION">إجازة</option>
+                  <option value="LATE_PERMISSION">اذن تاخير</option>
+                  <option value="EARLY_LEAVE">انصراف مبكر</option>
                 </select>
               </div>
 
@@ -1050,6 +1052,8 @@ const Dashboard = () => {
                   </option>
                   <option value="WFH">العمل من المنزل</option>
                   <option value="VACATION">إجازة</option>
+                  <option value="LATE_PERMISSION">اذن تاخير</option>
+                  <option value="EARLY_LEAVE">انصراف مبكر</option>
                 </select>
               </div>
 
