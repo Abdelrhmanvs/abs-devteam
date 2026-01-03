@@ -37,6 +37,7 @@ const Dashboard = () => {
   }, [axiosPrivate]);
 
   const [weekSchedule, setWeekSchedule] = useState([]);
+  const [teamWFH, setTeamWFH] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -88,6 +89,39 @@ const Dashboard = () => {
     };
 
     fetchWeekSchedule();
+  }, [axiosPrivate]);
+
+  // Fetch team WFH data for team leads and admins
+  useEffect(() => {
+    const fetchTeamWFH = async () => {
+      try {
+        const response = await axiosPrivate.get("/requests/weekly-wfh");
+        // Filter for today only
+        const today = new Date().toISOString().split("T")[0];
+        const todayWFH = [];
+
+        response.data.employees.forEach((employee) => {
+          const todaySchedule = employee.weekSchedule.find(
+            (day) => day.date === today && day.isWFH
+          );
+          if (todaySchedule) {
+            todayWFH.push({
+              name: employee.employeeName,
+              code: employee.employeeCode,
+              type: todaySchedule.type,
+            });
+          }
+        });
+
+        setTeamWFH(todayWFH);
+      } catch (error) {
+        console.error("Error fetching team WFH:", error);
+        // If 403, user is not a team lead/admin
+        setTeamWFH([]);
+      }
+    };
+
+    fetchTeamWFH();
   }, [axiosPrivate]);
 
   const isWFHDay = (date) => {
@@ -477,6 +511,118 @@ const Dashboard = () => {
           })}
         </div>
       </div>
+
+      {/* Team WFH Today Section - Only for Team Leads and Admins */}
+      {teamWFH.length > 0 && (
+        <div
+          style={{
+            background: "#2d2d2d",
+            borderRadius: "0.75rem",
+            padding: "1.5rem",
+            marginBottom: "2rem",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "600",
+              color: "#ffffff",
+              marginBottom: "1.5rem",
+            }}
+          >
+            Team Working From Home Today
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {teamWFH.map((employee, index) => (
+              <div
+                key={index}
+                style={{
+                  background: "#3a3a3a",
+                  border: "1px solid #4a4a4a",
+                  borderRadius: "0.5rem",
+                  padding: "1rem",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#404040";
+                  e.currentTarget.style.borderColor = "#f97316";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#3a3a3a";
+                  e.currentTarget.style.borderColor = "#4a4a4a";
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      background: "#f97316",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#ffffff",
+                      fontWeight: "bold",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {employee.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        color: "#ffffff",
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {employee.name}
+                    </div>
+                    <div
+                      style={{
+                        color: "#9ca3af",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {employee.code}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      background:
+                        employee.type === "WFH"
+                          ? "rgba(16, 185, 129, 0.2)"
+                          : "rgba(59, 130, 246, 0.2)",
+                      color: employee.type === "WFH" ? "#10b981" : "#3b82f6",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: "0.25rem",
+                      fontSize: "0.75rem",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {employee.type === "WFH" ? "WFH" : "Vacation"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent Requests Section */}
       <div

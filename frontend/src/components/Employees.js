@@ -86,6 +86,10 @@ const AddEmployee = () => {
       setError("Fingerprint Code is required");
       return false;
     }
+    if (!formData.title.trim()) {
+      setError("Title is required");
+      return false;
+    }
     return true;
   };
 
@@ -389,6 +393,18 @@ const AddEmployee = () => {
                       whiteSpace: "nowrap",
                     }}
                   >
+                    Title
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "1rem",
+                      color: "#9ca3af",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     Branch
                   </th>
                   <th
@@ -455,6 +471,15 @@ const AddEmployee = () => {
                       }}
                     >
                       {employee.jobPosition || "-"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "1rem",
+                        color: "#ffffff",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {employee.title || "-"}
                     </td>
                     <td
                       style={{
@@ -717,47 +742,6 @@ const AddEmployee = () => {
                 />
               </div>
 
-              {/* Title */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  htmlFor="title"
-                  style={{
-                    display: "block",
-                    color: "#ffffff",
-                    fontSize: "0.875rem",
-                    fontWeight: "500",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Title
-                </label>
-                <select
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    background: "#3a3a3a",
-                    color: "#ffffff",
-                    border: "1px solid #4a4a4a",
-                    borderRadius: "0.5rem",
-                    padding: "0.75rem 1rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <option value="">Select Title</option>
-                  <option value="Frontend Lead">Frontend Lead</option>
-                  <option value="Backend Lead">Backend Lead</option>
-                  <option value="Frontend Dev">Frontend Dev</option>
-                  <option value="Backend Dev">Backend Dev</option>
-                  <option value="UIUX">UIUX</option>
-                  <option value="RA">RA</option>
-                </select>
-              </div>
-
               {/* Email */}
               <div style={{ marginBottom: "1.5rem" }}>
                 <label
@@ -895,7 +879,7 @@ const AddEmployee = () => {
               </div>
 
               {/* Branch */}
-              <div style={{ marginBottom: "2rem" }}>
+              <div style={{ marginBottom: "1.5rem" }}>
                 <label
                   htmlFor="branch"
                   style={{
@@ -930,6 +914,49 @@ const AddEmployee = () => {
                       {branch}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              {/* Title */}
+              <div style={{ marginBottom: "2rem" }}>
+                <label
+                  htmlFor="title"
+                  style={{
+                    display: "block",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Title *
+                </label>
+                <select
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  style={{
+                    width: "100%",
+                    background: "#3a3a3a",
+                    color: formData.title ? "#ffffff" : "#6b7280",
+                    border: "1px solid #4a4a4a",
+                    borderRadius: "0.5rem",
+                    padding: "0.75rem 1rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select title
+                  </option>
+                  <option value="Frontend Lead">Frontend Lead</option>
+                  <option value="Backend Lead">Backend Lead</option>
+                  <option value="Frontend Developer">Frontend Developer</option>
+                  <option value="Backend Developer">Backend Developer</option>
+                  <option value="UI/UX">UI/UX</option>
+                  <option value="RA">RA</option>
                 </select>
               </div>
 

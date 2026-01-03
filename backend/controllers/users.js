@@ -119,6 +119,7 @@ const updateuser = asyncHandler(async (req, res) => {
     fingerprintCode,
     jobPosition,
     branch,
+    title,
     active,
     phonenumber,
     country,
@@ -145,6 +146,7 @@ const updateuser = asyncHandler(async (req, res) => {
   if (fingerprintCode) user.fingerprintCode = fingerprintCode;
   if (jobPosition) user.jobPosition = jobPosition;
   if (branch) user.branch = branch;
+  if (title) user.title = title;
 
   // Update regular user fields if provided
   if (username) user.username = username;
@@ -195,7 +197,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
   }
 
   res.json({
-    profile: {
+    user: {
       name: user.username,
       firstName: user.firstName || "",
       lastName: user.lastName || "",
@@ -207,6 +209,8 @@ const getUserProfile = asyncHandler(async (req, res) => {
       country: user.country,
       phonenumber: user.phonenumber,
       platformUsageCount: user.platformUsageCount || 0,
+      title: user.title || "",
+      fullName: user.fullName || "",
     },
   });
 });
@@ -331,6 +335,7 @@ const createEmployee = asyncHandler(async (req, res) => {
     fingerprintCode,
     jobPosition,
     branch,
+    title,
   } = req.body;
 
   // Validate required fields
@@ -407,8 +412,9 @@ const createEmployee = asyncHandler(async (req, res) => {
     password: hashedPassword,
     employeeCode,
     fingerprintCode,
-    jobPosition: "Software Engineer",
+    jobPosition: jobPosition || "Software Engineer",
     branch: branch || "Main Branch",
+    title: title,
     roles: ["user"], // Default role
     active: true,
   };
@@ -452,12 +458,40 @@ const createEmployee = asyncHandler(async (req, res) => {
 //@route GET /users/employees
 //@access Private (all authenticated users)
 const getAllEmployees = asyncHandler(async (req, res) => {
-  // Fetch only users with employeeCode (actual employees)
-  const employees = await User.find({
-    employeeCode: { $exists: true, $ne: null },
-  })
+  const email = req.user;
+  const roles = req.roles;
+
+  // Find the current user to get their title
+  const currentUser = await User.findOne({ email }).lean();
+  if (!currentUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Define team filtering based on title
+  const getTeamMemberTitles = (userTitle) => {
+    const teamMap = {
+      "Frontend Lead": ["Frontend Lead", "Frontend Developer", "UI/UX"],
+      "Backend Lead": ["Backend Lead", "Backend Developer", "RA"],
+    };
+    return teamMap[userTitle] || null;
+  };
+
+  let query = { employeeCode: { $exists: true, $ne: null } };
+
+  // Apply team filtering if user is a team lead (not admin)
+  if (!roles?.includes("admin") && currentUser.title) {
+    const allowedTitles = getTeamMemberTitles(currentUser.title);
+    if (allowedTitles) {
+      // User is a team lead, filter by team
+      query.title = { $in: allowedTitles };
+    }
+    // If not a team lead and not admin, they see no employees (or could see all)
+  }
+
+  // Fetch employees based on query
+  const employees = await User.find(query)
     .select(
-      "fullName fullNameArabic email phonenumber employeeCode fingerprintCode jobPosition branch"
+      "fullName fullNameArabic email phonenumber employeeCode fingerprintCode jobPosition branch title"
     )
     .lean();
 

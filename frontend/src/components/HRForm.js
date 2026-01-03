@@ -157,20 +157,18 @@ const HRForm = () => {
   const handleExportToExcel = () => {
     const filteredData = getFilteredData();
 
-    // Create Excel-compatible data structure with bilingual headers
+    // Create Excel-compatible data structure with exact columns from table
     const excelData = filteredData.map((row, index) => ({
-      "#": index + 1,
-      "Employee Code": row.code || "",
-      "Fingerprint ID": row.fingerprint || "",
-      "Employee Name": row.employeeName || "",
-      "Job Position": row.jobPosition || "",
-      "Branch / الفرع": row.branch || "",
-      "Request Type": row.timeOffType || "",
-      "Purpose / الغرض": row.purpose || "",
+      code: row.code || "",
+      "Employee / Fingerprint": row.fingerprint || "",
+      Employee: row.employeeName || "",
+      "Employee / Job Position": row.jobPosition || "",
+      "Employee / الفرع": row.branch || "",
+      "Time Off Type": row.timeOffType || "",
+      "الغرض من النموذج الإداري": row.purpose || "",
       "Start Date": row.startDate || "",
       "End Date": row.endDate || "",
-      "Days / الأيام": row.numberOfDays || "",
-      Status: row.status || "Approved",
+      "عدد الأيام": row.numberOfDays || "",
     }));
 
     // Create a new workbook and worksheet
@@ -180,32 +178,89 @@ const HRForm = () => {
 
     // Enhanced column widths for better readability
     const columnWidths = [
-      { wch: 5 }, // #
-      { wch: 15 }, // Employee Code
-      { wch: 15 }, // Fingerprint ID
-      { wch: 30 }, // Employee Name
-      { wch: 25 }, // Job Position
-      { wch: 20 }, // Branch
-      { wch: 18 }, // Request Type
-      { wch: 35 }, // Purpose
-      { wch: 12 }, // Start Date
-      { wch: 12 }, // End Date
-      { wch: 10 }, // Days
-      { wch: 12 }, // Status
+      { wch: 15 }, // code
+      { wch: 22 }, // Employee / Fingerprint
+      { wch: 32 }, // Employee
+      { wch: 28 }, // Employee / Job Position
+      { wch: 22 }, // Employee / الفرع
+      { wch: 20 }, // Time Off Type
+      { wch: 38 }, // الغرض من النموذج الإداري
+      { wch: 15 }, // Start Date
+      { wch: 15 }, // End Date
+      { wch: 15 }, // عدد الأيام
     ];
     worksheet["!cols"] = columnWidths;
 
-    // Add header row styling (bold, background color)
     const range = XLSX.utils.decode_range(worksheet["!ref"]);
+
+    // Enhanced header row styling with professional design
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
       if (!worksheet[cellAddress]) continue;
       worksheet[cellAddress].s = {
-        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: "4472C4" } },
-        alignment: { horizontal: "center", vertical: "center" },
+        font: { 
+          bold: true, 
+          sz: 13, 
+          color: { rgb: "FFFFFF" },
+          name: "Calibri"
+        },
+        fill: { 
+          patternType: "solid",
+          fgColor: { rgb: "1F4E78" } // Professional dark blue
+        },
+        alignment: { 
+          horizontal: "center", 
+          vertical: "center",
+          wrapText: true
+        },
+        border: {
+          top: { style: "thin", color: { rgb: "FFFFFF" } },
+          bottom: { style: "medium", color: { rgb: "1F4E78" } },
+          left: { style: "thin", color: { rgb: "FFFFFF" } },
+          right: { style: "thin", color: { rgb: "FFFFFF" } }
+        }
       };
     }
+
+    // Style data rows with alternating colors and borders
+    for (let row = range.s.r + 1; row <= range.e.r; row++) {
+      const isEvenRow = row % 2 === 0;
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!worksheet[cellAddress]) continue;
+        
+        worksheet[cellAddress].s = {
+          font: { 
+            sz: 11,
+            name: "Calibri",
+            color: { rgb: "000000" }
+          },
+          fill: { 
+            patternType: "solid",
+            fgColor: { rgb: isEvenRow ? "F2F2F2" : "FFFFFF" } // Alternating rows
+          },
+          alignment: { 
+            horizontal: col === 0 ? "center" : "left", // Center code column
+            vertical: "center",
+            wrapText: true
+          },
+          border: {
+            top: { style: "thin", color: { rgb: "D9D9D9" } },
+            bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+            left: { style: "thin", color: { rgb: "D9D9D9" } },
+            right: { style: "thin", color: { rgb: "D9D9D9" } }
+          }
+        };
+      }
+    }
+
+    // Set row heights for better spacing
+    const rowHeights = [];
+    rowHeights[0] = { hpx: 35 }; // Header row height
+    for (let i = 1; i <= range.e.r; i++) {
+      rowHeights[i] = { hpx: 25 }; // Data row height
+    }
+    worksheet["!rows"] = rowHeights;
 
     // Add filters to header row
     worksheet["!autofilter"] = { ref: worksheet["!ref"] };

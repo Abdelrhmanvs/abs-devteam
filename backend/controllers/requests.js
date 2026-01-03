@@ -13,6 +13,15 @@ const getHRCategory = (requestType) => {
   return categoryMap[requestType] || "غير محدد";
 };
 
+// Team filtering helper - defines which titles can see which team members
+const getTeamMemberTitles = (userTitle) => {
+  const teamMap = {
+    "Frontend Lead": ["Frontend Lead", "Frontend Developer", "UI/UX"],
+    "Backend Lead": ["Backend Lead", "Backend Developer", "RA"],
+  };
+  return teamMap[userTitle] || null;
+};
+
 //@desc Create new request
 //@route POST /requests
 //@access Private
@@ -394,8 +403,9 @@ const deleteRequest = asyncHandler(async (req, res) => {
 });
 
 //@desc Get weekly WFH schedule (Sunday to Saturday)
+//@desc Get weekly WFH schedule for all employees
 //@route GET /requests/weekly-wfh
-//@access Private (Admin)
+//@access Private (Admin and Team Leads)
 const getWeeklyWFH = asyncHandler(async (req, res) => {
   const email = req.user;
   const roles = req.roles;
@@ -404,21 +414,20 @@ const getWeeklyWFH = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "User not found in token" });
   }
 
-  // Get the current user to check their title
-  const currentUser = await User.findOne({ email }).exec();
+  // Find the current user to get their title
+  const currentUser = await User.findOne({ email }).lean();
   if (!currentUser) {
     return res.status(404).json({ message: "User not found" });
   }
 
-  // Check authorization: Admin, Frontend Lead, or Backend Lead
+  // Determine if user has access and which team members they can see
   const isAdmin = roles?.includes("admin");
-  const isFrontendLead = currentUser.title === "Frontend Lead";
-  const isBackendLead = currentUser.title === "Backend Lead";
+  const allowedTitles = getTeamMemberTitles(currentUser.title);
 
-  if (!isAdmin && !isFrontendLead && !isBackendLead) {
+  if (!isAdmin && !allowedTitles) {
     return res
       .status(403)
-      .json({ message: "Unauthorized - Admin or Lead access only" });
+      .json({ message: "Unauthorized - Admin or Team Lead access only" });
   }
 
   // Calculate current week (Sunday to Saturday) in local timezone
@@ -443,30 +452,30 @@ const getWeeklyWFH = asyncHandler(async (req, res) => {
   );
   saturday.setHours(23, 59, 59, 999);
 
-  // Fetch all approved requests that overlap with current week
+  // Build employee filter query
+  let employeeFilter = { employeeCode: { $exists: true, $ne: null } };
+  if (!isAdmin && allowedTitles) {
+    // Team lead sees only their team
+    employeeFilter.title = { $in: allowedTitles };
+  }
+
+  // Fetch team members based on filter
+  const teamMembers = await User.find(employeeFilter)
+    .select("_id fullName employeeCode title")
+    .lean();
+
+  const teamMemberIds = teamMembers.map((m) => m._id);
+
+  // Fetch all approved requests for team members that overlap with current week
   const approvedRequests = await Request.find({
     status: "Approved",
+    employeeId: { $in: teamMemberIds },
     startDate: { $lte: saturday },
     endDate: { $gte: sunday },
   })
-    .populate("employeeId", "fullName employeeCode title")
+    .populate("employeeId", "fullName employeeCode")
     .sort({ employeeName: 1 })
     .lean();
-
-  // Filter requests based on user's title
-  let filteredRequests = approvedRequests;
-  if (isFrontendLead) {
-    // Frontend Lead sees only Frontend Dev employees
-    filteredRequests = approvedRequests.filter(
-      (req) => req.employeeId?.title === "Frontend Dev"
-    );
-  } else if (isBackendLead) {
-    // Backend Lead sees only Backend Dev employees
-    filteredRequests = approvedRequests.filter(
-      (req) => req.employeeId?.title === "Backend Dev"
-    );
-  }
-  // Admin sees all (no filtering needed)
 
   // Generate array of days for current week using local dates
   const weekDays = [];
@@ -497,7 +506,7 @@ const getWeeklyWFH = asyncHandler(async (req, res) => {
   // Build employee WFH schedule
   const employeeSchedule = new Map();
 
-  filteredRequests.forEach((request) => {
+  approvedRequests.forEach((request) => {
     const employeeName =
       request.employeeId?.fullName || request.employeeName || "Unknown";
     const employeeCode =
@@ -671,7 +680,7 @@ const generateRandomWFH = asyncHandler(async (req, res) => {
         continue;
       }
 
-      // Randomly select days for this employee (excluding Friday)
+      // Randomly select days for this employee (excluding Fridays - day index 5)
       const availableDayIndices = [0, 1, 2, 3, 4, 6]; // Sunday to Saturday, excluding Friday (5)
       const selectedDayIndices = [];
 

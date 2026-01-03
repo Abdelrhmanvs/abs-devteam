@@ -1,21 +1,40 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import useLogout from "../hooks/useLogout";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import absLogo from "../assets/ABS-Logo.png";
 
 const UpperNav = () => {
   const { auth } = useAuth();
   const logout = useLogout();
   const navigate = useNavigate();
+  const axiosPrivate = useAxiosPrivate();
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Check if user is admin
+  const isAdmin = auth?.roles?.includes("admin");
+
+  // Fetch user profile to get title
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axiosPrivate.get("/users/profile");
+        setUserProfile(response.data.user);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    if (auth?.user) {
+      fetchUserProfile();
+    }
+  }, [auth?.user, axiosPrivate]);
 
   const handleLogout = async () => {
     await logout();
     navigate("/login");
   };
-
-  // Check if user is admin
-  const isAdmin = auth?.roles?.includes("admin");
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -194,7 +213,11 @@ const UpperNav = () => {
                 fontSize: "0.875rem",
               }}
             >
-              {auth?.user ? auth.user.substring(0, 2).toUpperCase() : "JD"}
+              {userProfile?.fullName
+                ? userProfile.fullName.substring(0, 2).toUpperCase()
+                : auth?.user
+                ? auth.user.substring(0, 2).toUpperCase()
+                : "JD"}
             </div>
             <div style={{ flex: 1 }}>
               <div
@@ -204,10 +227,13 @@ const UpperNav = () => {
                   fontWeight: "600",
                 }}
               >
-                {auth?.user || "John Doe"}
+                {userProfile?.fullName ||
+                  userProfile?.name ||
+                  auth?.user ||
+                  "John Doe"}
               </div>
               <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>
-                {isAdmin ? "Admin" : "Employee"}
+                {isAdmin ? "Admin" : userProfile?.title || "Employee"}
               </div>
             </div>
           </div>

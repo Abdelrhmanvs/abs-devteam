@@ -89,21 +89,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  branch: {
+    type: String,
+    default: "المركز الرئيسي",
+    trim: true,
+  },
   title: {
     type: String,
     enum: [
       "Frontend Lead",
       "Backend Lead",
-      "Frontend Dev",
-      "Backend Dev",
-      "UIUX",
+      "Frontend Developer",
+      "Backend Developer",
+      "UI/UX",
       "RA",
     ],
-    trim: true,
-  },
-  branch: {
-    type: String,
-    default: "المركز الرئيسي",
     trim: true,
   },
 
